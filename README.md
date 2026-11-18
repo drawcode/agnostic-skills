@@ -10,6 +10,7 @@ dependencies and no network access.
 | Skill | What it does |
 |---|---|
 | [`thread-cost`](skills/thread-cost/) | Per-turn and per-thread cost estimates from the harness's own transcript, cost alerts in steps, and a capture-then-clear handoff at a cost or context threshold, so long threads stay cheap. |
+| [`video-trim`](skills/video-trim/) | Cut the dead time out of a screen recording (ffmpeg freeze detection, with a beat kept at each edge and a source-time subtitle track), keep explicit or log-driven windows, scrub notification banners out by OCR, build slowed before/after side-by-sides and contact sheets, and join recordings into one review video with chapters. |
 
 More are on the way.
 
