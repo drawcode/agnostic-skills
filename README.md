@@ -13,6 +13,7 @@ lists them in its `INSTALL.md`.
 | [`thread-cost`](skills/thread-cost/) | Per-turn and per-thread cost estimates from the harness's own transcript, cost alerts in steps, and a capture-then-clear handoff at a cost or context threshold, so long threads stay cheap. |
 | [`video-trim`](skills/video-trim/) | Cut the dead time out of a screen recording (ffmpeg freeze detection, with a beat kept at each edge and a source-time subtitle track), keep explicit or log-driven windows, scrub notification banners out by OCR, build slowed before/after side-by-sides and contact sheets, and join recordings into one review video with chapters. |
 | [`device-testing`](skills/device-testing/) | Drive an attached Android phone or iPhone from the terminal with one command set: install a build and prove which change it carries, launch, tap, swipe, type, screenshot, record, and wait on log evidence instead of sleeping. Plans run a whole flow in one call; a runner subagent profile and an optional hook keep agents from sending one tap per turn. |
+| [`gameplay-verification`](skills/gameplay-verification/) | Verify a gameplay fix by driving a live round into the failing state and measuring the change, not by reasoning that it compiles. Reach a real round (and know what a scripted shortcut skips), protect the player's save, probe state rather than screenshots, sample rates and sub-second effects from inside the frame, and report what was and was not exercised. Any engine; your engine and game go in add-ons. |
 
 More are on the way.
 
