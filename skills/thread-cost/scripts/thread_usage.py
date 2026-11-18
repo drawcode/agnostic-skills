@@ -153,6 +153,7 @@ class Prices:
         self.sources = data.get("sources") or {}
         self.w5 = data.get("cache_write_5m_mult", 1.25)
         self.w1h = data.get("cache_write_1h_mult", 2.0)
+        self.ttl = data.get("cache_ttl_min", 60)
         self.models = data["models"]
         self._keys = sorted(self.models, key=len, reverse=True)
 
@@ -950,7 +951,8 @@ def main_time(main_events, idle_s):
 
 def finish_last_request(last_req, prices):
     """Newest main-thread request: when it ended, how big its context was, and the extra cost of
-    re-writing that context to a cold 1h cache instead of reading it warm."""
+    re-writing that context to a cold 1h cache instead of reading it warm, and how long the
+    model's prompt cache lasts (cache_ttl_min in the price file)."""
     if not last_req:
         return None
     p = prices.lookup(last_req["model"], last_req.get("end"))
@@ -958,7 +960,9 @@ def finish_last_request(last_req, prices):
     if p:
         w1h = p.get("cache_write_1h", p["input"] * p.get("cache_write_mult", prices.w1h))
         rewrite = round(last_req["context"] * (w1h - p["cache_read"]) / 1_000_000, 4)
-    return {"end": last_req["end"], "context": last_req["context"], "rewrite_extra_usd": rewrite}
+    ttl = (p or {}).get("cache_ttl_min", prices.ttl)
+    return {"end": last_req["end"], "context": last_req["context"], "rewrite_extra_usd": rewrite,
+            "cache_ttl_min": ttl}
 
 
 def compute(data, prices, t_from, t_to, idle_s):

@@ -52,7 +52,8 @@ Options (each also an env var and a key in the thread-cost config file; env wins
   --ctx-capture-k K   THREAD_CTX_CAPTURE_K        / thread_ctx_capture_k       (300)
   --ctx-step-k K      THREAD_CTX_STEP_K           / thread_ctx_step_k          (100)
   --ctx-growth-k K    THREAD_CTX_GROWTH_K         / thread_ctx_growth_k        (40; 0 = off)
-  --cache-ttl-min M   THREAD_CACHE_TTL_MIN        / thread_cache_ttl_min       (60)
+  --cache-ttl-min M   THREAD_CACHE_TTL_MIN        / thread_cache_ttl_min       (the model's cache_ttl_min
+                      in model_prices.json: 60 for Claude, 10 for Gemini's implicit cache)
   --idle-min-ctx-k K  THREAD_IDLE_MIN_CTX_K       / thread_idle_min_ctx_k      (100)
   turn cost line      THREAD_TURN_COST_LINE       / thread_turn_cost_line      (on)
   state               THREAD_HOOKS_STATE_DIR, else <state root>/cost-alert/ (thread_hooks_common.py)
@@ -178,13 +179,24 @@ def alert_message(usage, crossed, level=1):
             "new thread at the next natural break.")
 
 
+def cache_ttl_min(usage, args):
+    """Prompt-cache lifetime in minutes: the explicit setting, else the last model's price entry."""
+    if args.cache_ttl_min is not None:
+        return float(args.cache_ttl_min)
+    return float((usage.get("last_request") or {}).get("cache_ttl_min") or 60)
+
+
+def ttl_text(minutes):
+    return f"about {minutes / 60:g}h" if minutes >= 60 else f"about {minutes:g} min"
+
+
 def idle_gap_note(usage, now, args):
     last = usage.get("last_request")
     if not last:
         return None
     gap_min = (now - float(last["end"])) / 60
     ctx = int(last.get("context") or 0)
-    if gap_min < args.cache_ttl_min or ctx < args.idle_min_ctx_k * 1000:
+    if gap_min < cache_ttl_min(usage, args) or ctx < args.idle_min_ctx_k * 1000:
         return None
     extra = last.get("rewrite_extra_usd")
     extra_txt = f", about ${extra:.2f} more than a warm read" if extra else ""
@@ -324,7 +336,7 @@ def stop_output(args, usage, state, stop_hook_active):
         state["ctx_capture"] = 0
     if ctx >= warn_at and not state.get("ctx_warn"):
         add_message(out, f"Context is now ~{round(ctx / 1000)}K tokens; every request re-reads it. "
-                         "The prompt cache lasts 1h, so if you will be away longer, capture and "
+                         f"The prompt cache lasts {ttl_text(cache_ttl_min(usage, args))}, so if you will be away longer, capture and "
                          f"continue from a handoff {common.clear_phrase(usage.get('harness'))}.")
         state["ctx_warn"] = 1
     elif ctx >= warn_at:
@@ -493,7 +505,8 @@ def main():
     p.add_argument("--ctx-capture-k", type=float, default=c("THREAD_CTX_CAPTURE_K", "thread_ctx_capture_k", 300))
     p.add_argument("--ctx-step-k", type=float, default=c("THREAD_CTX_STEP_K", "thread_ctx_step_k", 100))
     p.add_argument("--ctx-growth-k", type=float, default=c("THREAD_CTX_GROWTH_K", "thread_ctx_growth_k", 40))
-    p.add_argument("--cache-ttl-min", type=float, default=c("THREAD_CACHE_TTL_MIN", "thread_cache_ttl_min", 60))
+    p.add_argument("--cache-ttl-min", type=float, default=c("THREAD_CACHE_TTL_MIN", "thread_cache_ttl_min", None),
+                   help="default: the last model's cache_ttl_min in model_prices.json")
     p.add_argument("--idle-min-ctx-k", type=float, default=c("THREAD_IDLE_MIN_CTX_K", "thread_idle_min_ctx_k", 100))
     p.add_argument("--json", action="store_true", help="check output is always JSON")
     p.add_argument("--dry-run", action="store_true", help="hook mode: print, record nothing")

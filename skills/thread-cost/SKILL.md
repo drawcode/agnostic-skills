@@ -48,7 +48,7 @@ with `thread_capture_step` or `thread_capture_step_file` (see Config).
 | $15 (then every $15), or live context 300K (then every 100K) | `thread_cost_alert.py` | Blocks the stop once with the capture instruction. Context levels re-arm after a compact. |
 | Live context 40K past the session's own start (then every 40K) | `thread_cost_alert.py` | Same capture block, keeping threads small. The baseline is the first main-thread request since the last compact. Also tells the model to record the handoff with `thread_handoff.py set`. Skipped for subagents. Needs a readable transcript (Claude Code). |
 | SessionStart after `clear` or `compact` | `thread_handoff.py` | If a handoff was recorded for this cwd in the last 6h and not yet used, tells the new session to read it first. One-shot. |
-| Resume after 60+ min on a context over 100K | `thread_cost_alert.py` | The prompt cache has lapsed; the model says so in one line and suggests the handoff and a clear at a boundary. |
+| Resume past the model's cache lifetime (60 min Claude, 10 min Gemini) on a context over 100K | `thread_cost_alert.py` | The prompt cache has lapsed; the model says so in one line and suggests the handoff and a clear at a boundary. |
 | 50 min with no user input (cost >= $1, context >= 60K) | `thread_idle_capture.py` | Wakes the thread once (Claude Code `asyncRewake`) to run the same capture, inside the 1h cache window so the capture reads warm. |
 
 Cost is an API list-price estimate (`scripts/model_prices.json`, Anthropic, OpenAI and Gemini
@@ -95,6 +95,7 @@ default. No file is needed. The script docstrings (`--help`) list every knob; th
 | `thread_ctx_capture_k` / `thread_ctx_step_k` | 300 / 100 | context capture (K tokens) |
 | `thread_ctx_growth_k` | 40 | growth capture over the session start; 0 = off |
 | `thread_idle_capture_min` | 50 | idle wake; keep it under the 1h cache TTL |
+| `thread_cache_ttl_min` | per model | prompt-cache lifetime for the idle-gap note and the context warning; unset = the last model's `cache_ttl_min` in `model_prices.json` (60 for Claude; 10 for Gemini, whose implicit cache has no documented TTL and measured warm at 9 min, cold at 27) |
 | `thread_turn_cost_line` | 1 | 0 = no per-turn cost line |
 | `thread_capture_step` / `thread_capture_step_file` | built in | the capture step, as one line or a text file |
 | `thread_hooks_state_dir` | per-user state dir | hook state (`%LOCALAPPDATA%\thread-hooks`, else `${XDG_STATE_HOME:-~/.local/state}/thread-hooks`) |
