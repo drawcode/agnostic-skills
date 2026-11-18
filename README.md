@@ -3,7 +3,8 @@
 Agent skills that work in any harness (Claude Code, Antigravity, Codex, opencode, Cursor, or a
 bare terminal) on macOS, Linux and Windows. Each skill is one self-contained folder: a `SKILL.md`
 the agent reads, an `INSTALL.md`, and `scripts/` in stdlib `python3` (3.8+), with no
-dependencies and no network access.
+Python dependencies and no network access. A skill that drives outside tools (ffmpeg, adb, Xcode)
+lists them in its `INSTALL.md`.
 
 ## Skills
 
@@ -11,6 +12,7 @@ dependencies and no network access.
 |---|---|
 | [`thread-cost`](skills/thread-cost/) | Per-turn and per-thread cost estimates from the harness's own transcript, cost alerts in steps, and a capture-then-clear handoff at a cost or context threshold, so long threads stay cheap. |
 | [`video-trim`](skills/video-trim/) | Cut the dead time out of a screen recording (ffmpeg freeze detection, with a beat kept at each edge and a source-time subtitle track), keep explicit or log-driven windows, scrub notification banners out by OCR, build slowed before/after side-by-sides and contact sheets, and join recordings into one review video with chapters. |
+| [`device-testing`](skills/device-testing/) | Drive an attached Android phone or iPhone from the terminal with one command set: install a build and prove which change it carries, launch, tap, swipe, type, screenshot, record, and wait on log evidence instead of sleeping. Plans run a whole flow in one call; a runner subagent profile and an optional hook keep agents from sending one tap per turn. |
 
 More are on the way.
 
