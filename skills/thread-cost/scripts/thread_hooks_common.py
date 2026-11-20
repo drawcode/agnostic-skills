@@ -73,12 +73,13 @@ def cfg_str(env_key, cfg_key, default=None):
 
 
 def cfg(env_key, cfg_key, default):
-    """Float knob: env, then the config file, then default."""
+    """Float knob: env, then the config file, then default (None stays None: "derive it")."""
     raw = cfg_str(env_key, cfg_key)
+    fallback = None if default is None else float(default)
     try:
-        return float(raw) if raw not in (None, "") else float(default)
+        return float(raw) if raw not in (None, "") else fallback
     except ValueError:
-        return float(default)
+        return fallback
 
 
 def cfg_flag(env_key, cfg_key, default):
