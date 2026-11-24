@@ -1,6 +1,6 @@
 ---
 name: video-trim
-description: Use to cut the dead time out of a screen recording before handing it over -- a phone screenrecord, an engine or app recorder clip, a video encoded from frame dumps, or any mp4 with long stretches where nothing on screen changes. Detects freezes with ffmpeg, keeps a short beat at each edge so every screen still visibly settles, and writes a trimmed copy with a source-time subtitle track and a segment map so a moment in the short video can still be matched to its log line. Also keeps explicit or log-driven windows when a held screen is the evidence, builds slowed before/after side-by-sides, makes contact sheets to check a cut, and cuts notification banners or any other non-app overlay (personal info such as a payment or doorbell alert) out of a recording before it is analyzed or shared. Works anywhere ffmpeg runs.
+description: Use to cut the dead time out of a screen recording before handing it over -- a phone screenrecord, an engine or app recorder clip, a video encoded from frame dumps, or any mp4 with long stretches where nothing on screen changes. Crops every recording to the app's own rectangle by default, so a desktop, menu bar, dock, other windows or chat around an emulator or window never reach a viewer (an app-only phone recording is detected and left alone; the full frame is kept only when the surroundings are the evidence). Detects freezes with ffmpeg, keeps a short beat at each edge so every screen still visibly settles, and writes a trimmed copy with a source-time subtitle track and a segment map so a moment in the short video can still be matched to its log line. Also keeps explicit or log-driven windows when a held screen is the evidence, builds slowed before/after side-by-sides, makes contact sheets to check a cut, and cuts notification banners or any other non-app overlay (personal info such as a payment or doorbell alert) out of a recording before it is analyzed or shared. Works anywhere ffmpeg runs.
 ---
 
 # Trim the static stretches out of a recording
@@ -12,18 +12,56 @@ trimmed copy was 84 s and 7 MB, with every screen change still on screen.
 Scripts are in `<skill>/scripts/` (`<skill>` = the folder holding this file). Python 3 stdlib
 plus `ffmpeg` and `ffprobe` on PATH. All of them write a new file (never the input, except
 `scrub_overlays.py --in-place`), refuse to overwrite an output without `--force`, print a result
-line on stdout, take `--json`, and exit `0` ok / `1` ffmpeg or processing failed / `2` bad input (`stitch.py` differs, see its section).
+line on stdout, take `--json`, and exit `0` ok / `1` ffmpeg or processing failed / `2` bad input (`stitch.py` differs, see its section; crop detection that would have to guess exits `3` in `trim.py` and `cut_windows.py`).
 
 | script | use it for |
 |---|---|
-| `trim.py` | cut every frozen stretch, keep a beat at each edge |
-| `cut_windows.py` | keep explicit windows instead -- when a held screen is the evidence |
+| `app_crop.py` | find the app's rectangle in a larger capture (also runs inside the two below) |
+| `trim.py` | cut every frozen stretch, keep a beat at each edge, crop to the app |
+| `cut_windows.py` | keep explicit windows instead -- when a held screen is the evidence; crops to the app |
 | `scrub_overlays.py` | cut notification banners out before anything else |
 | `stitch.py` | join per-feature recordings into one review video with a chapter list |
 | `side_by_side.py` | slowed before/after of a sub-second effect |
 | `frame_strip.py` | contact sheet to check a cut before handing it over |
 
-Order: **scrub -> trim or cut -> frame strip -> stitch (if one file is wanted) -> hand over.**
+Order: **scrub -> crop to app + trim or cut (one encode) -> frame strip -> stitch (if one file is wanted) -> hand over.**
+
+## Crop to the app (on by default)
+
+A recording often shows more than the app: a desktop capture with the app in a window, an emulator
+or an engine's game view inside a larger screen, mirrored phone windows, a menu bar, a dock, other
+windows, notifications. Viewers should not see file names, chat or anything personal, so `trim.py`
+and `cut_windows.py` crop to the app's own rectangle in the same encode as the cut. Nothing to
+pass: detection runs first and its verdict is printed, written into the trimmap/segments file (a
+`crop: W:H:X:Y` line) and shown as stills.
+
+```bash
+python3 <skill>/scripts/app_crop.py desktop.mp4            # detect only: verdict + before/after stills
+python3 <skill>/scripts/trim.py desktop.mp4 --crop 800:600:300:150   # name the box yourself
+python3 <skill>/scripts/trim.py desktop.mp4 --no-crop      # keep the whole frame
+```
+
+- **Detect.** 16 frames sampled across the video. Two kinds of evidence: a *flat border* (ffmpeg
+  `cropdetect` for black bars, plus outer rows and columns that hold one flat color in every
+  sample) and *motion* (the box around pixels that change; a static desktop never does). The box
+  is taken only when the evidence agrees, and a motion box also needs a real window edge (a
+  contrast step inside vs outside) on every side it crops.
+- **App-only is left alone.** A phone screenrecord whose content fills the frame comes back
+  `app-only` and is not cropped; the output says so.
+- **Snap and encode.** The box is made even (x, y, w, h) and applied together with the trim, so
+  there is one encode. `<out>.crop-before.png` (full frame, box outlined) and
+  `<out>.crop-after.png` are written next to the output: look at both before sharing.
+- **Ambiguous = exit 3, never a guess.** Two windows, a lone small animation on a full-screen app,
+  or a box with no edge evidence stop with the reasons printed. Pass `--crop W:H:X:Y` (pixels, from
+  the stills) or `--no-crop`.
+- **Setting.** `VIDEO_TRIM_CROP=off` (environment, or `VIDEO_TRIM_CROP=off` in
+  `~/.config/video-trim/config.env`) keeps the full frame by default; `--crop` still works.
+- **Limit.** The moving part can be smaller than the app (a static title bar); edges are snapped
+  outward to a real edge when one is near, otherwise check the still and pass `--crop`.
+- **Keep the desktop only when it is part of the evidence:** a tool panel or inspector that is
+  the point, two windows compared side by side, a menu or system dialog being shown. Use
+  `--no-crop` and say in the hand-over that the full frame was kept on purpose. Otherwise crop,
+  and say the video was cropped to the app.
 
 ## `trim.py`: cut the freezes
 
@@ -36,10 +74,10 @@ python3 <skill>/scripts/trim.py video/run.mp4 out.mp4 --min 1.5 --keep-in 0.6 --
    change, and scaling first makes it several times faster. Roughly 13x realtime at 1080x2424.
 2. **Cut.** Every freeze longer than `--min` (1.5 s) keeps its first `--keep-in` (0.6 s) and last
    `--keep-out` (0.4 s). The reviewer still sees each screen arrive and settle.
-3. **Encode.** One `trim`/`concat` graph, H.264 CRF 30, `yuv420p` so it plays in browsers and
+3. **Encode.** One crop + `trim`/`concat` graph, H.264 CRF 30, `yuv420p` so it plays in browsers and
    QuickTime.
 4. **Keep the clock.** A `mov_text` subtitle track shows the source time of each kept segment, and
-   `<out>.trimmap.txt` lists the kept `src_start src_end` pairs. If `<in>.start` exists (one line,
+   `<out>.trimmap.txt` lists the crop box and the kept `src_start src_end` pairs. If `<in>.start` exists (one line,
    the wall-clock time recording began) it is included, so `start + src offset` = the log time.
 
 ## `cut_windows.py`: keep the windows that matter
@@ -150,6 +188,12 @@ One grab per time (so variable-frame-rate sources show the frame actually on scr
 handing a video over: a banner that slipped through, a debug overlay, an evidence screen cut too
 short.
 
+## Pre-share checklist
+
+- Notification banners and other overlays scrubbed (`scrub_overlays.py`), and the surroundings
+  cropped away (crop-before/after stills checked) -- or the full frame kept on purpose and said so.
+- A frame strip of the final file shows no banner, no desktop, no file names or chat.
+
 ## Rules
 
 - **Work on a copy, never the original** (`scrub_overlays.py --in-place` is the exception). The
@@ -158,7 +202,7 @@ short.
   (`adb shell date +%H:%M:%S.%3N`, or `device record start` in the `device-testing` skill),
   `date` for a desktop capture.
   Without it a cut video cannot be lined up with a log.
-- **Say it is trimmed** when handing a video over, and send the `.trimmap.txt` /
+- **Say it is trimmed and cropped** (crop box, or "full frame kept because ...") when handing a video over, and send the `.trimmap.txt` /
   `.segments.txt` if anyone will match it to logs. A reader who assumes real time will misjudge
   how long a load took.
 - **Do not trim a timing capture.** A video whose point is how long something took must stay

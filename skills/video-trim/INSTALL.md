@@ -11,15 +11,20 @@ What it does and when to use each script: [`SKILL.md`](./SKILL.md).
 | `ffmpeg` and `ffprobe` on PATH | every script | macOS `brew install ffmpeg`; Debian/Ubuntu `apt install ffmpeg`; Windows `winget install Gyan.FFmpeg` or `choco install ffmpeg` |
 | OCR, only for `scrub_overlays.py` | reading banners | macOS: nothing extra when `swiftc` exists (Xcode command line tools: `xcode-select --install`); the Vision helper is built once on first use. Any OS: `tesseract` on PATH (`brew install tesseract`, `apt install tesseract-ocr`, or the UB Mannheim installer / `choco install tesseract` on Windows) |
 
-No network access, no config file, nothing written outside the outputs you name and a per-user
+No network access, nothing written outside the outputs you name and a per-user
 cache folder for the compiled OCR helper (`VIDEO_TRIM_CACHE`, else `~/.cache/video-trim`, or
 `%LOCALAPPDATA%\video-trim` on Windows).
+
+Optional setting: `VIDEO_TRIM_CROP=off` (environment, or a `KEY=VALUE` line in
+`~/.config/video-trim/config.env`) stops `trim.py` and `cut_windows.py` cropping to the app by
+default; the default is `auto`.
 
 ## What is in it
 
 | Path | What it is |
 |---|---|
 | `SKILL.md` | When to use which script, the rules and the traps |
+| `scripts/app_crop.py` | Find the app's rectangle in a larger capture (used by the two below) |
 | `scripts/trim.py` | Cut every frozen stretch, keep a beat at each edge |
 | `scripts/cut_windows.py` | Keep explicit or log-driven windows instead |
 | `scripts/scrub_overlays.py` | Cut notification banners out (OCR) |

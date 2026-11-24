@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Pre-commit guard, harness agnostic: runs for every commit from any tool or person.
+#
+#   1. scan_sensitive.py --staged --added: no personal, device, machine or secret value in
+#      any line this commit adds (home paths, emails, device ids, fingerprints, keys, tokens,
+#      password/secret assignments, every value in the home config, and your extra patterns).
+#   2. check_scripts.py on staged scripts: the script contract (doc, --help, --json, exit
+#      codes, indexed) plus the same sensitive scan over the whole script.
+#
+# Fix a hit by moving the value to the home config (homecfg.py) and writing <config:key> or ~/…;
+# scrub_sensitive.py does that mechanically. A PUBLIC or FAKE value goes in .sensitive-allow.
+# Installed by install_hooks.py (git core.hooksPath). Exit codes: 0 pass, 1 blocked.
+# portability-exception: git hook; git runs hooks through sh on every OS (Git for Windows
+# bundles bash). The checks themselves are python3.
+set -u
+kit="$(cd "$(dirname "$0")/.." && pwd)"
+fail=0
+
+if ! python3 "$kit/scan_sensitive.py" --staged --added; then
+    echo "pre-commit: blocked: sensitive value(s) in the lines this commit adds (above)." >&2
+    fail=1
+fi
+
+scripts=()
+while IFS= read -r -d '' f; do
+    case "$f" in
+        *.py|*.sh) scripts+=("$f") ;;
+    esac
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+if [ ${#scripts[@]} -gt 0 ]; then
+    if ! python3 "$kit/check_scripts.py" "${scripts[@]}"; then
+        echo "pre-commit: blocked: staged script(s) break the script contract (above)." >&2
+        fail=1
+    fi
+fi
+
+exit $fail
