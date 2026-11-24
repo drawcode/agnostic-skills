@@ -23,7 +23,9 @@ Examples (SKILL = the skill folder):
 Writes OUT (default <in>-cut.mp4: H.264, yuv420p, faststart, no audio) and <OUT>.segments.txt
 (a header with the source and start time, then "src_start src_end" lines). Never touches the input,
 and refuses to replace an existing output unless --force.
-Exit codes: 0 ok, 1 ffmpeg or processing failed, 2 bad input.
+The frame is cropped to the app's own rectangle first (app_crop.py; --no-crop or --crop W:H:X:Y to
+override) and the box is recorded in the segments file; before/after stills sit next to the output.
+Exit codes: 0 ok, 1 ffmpeg or processing failed, 2 bad input, 3 crop detection ambiguous.
 """
 import argparse
 import datetime as dt
@@ -33,6 +35,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import app_crop  # noqa: E402
 
 DEFAULT_LOG_TIME_REGEX = r"(\d\d-\d\d \d\d:\d\d:\d\d\.\d+)"
 DEFAULT_LOG_TIME_FORMAT = "%m-%d %H:%M:%S.%f"
@@ -144,9 +149,12 @@ def merge(windows, gap):
     return out
 
 
-def build_graph(wins, fps, crop_top, crop_bottom, scale_width):
+def build_graph(wins, fps, crop_top, crop_bottom, scale_width, app_crop_f=""):
     n = len(wins)
-    graph = "[0:v]fps=%s," % fps
+    graph = "[0:v]"
+    if app_crop_f:
+        graph += app_crop_f + ","
+    graph += "fps=%s," % fps
     if n > 1:
         graph += "split=%d%s;" % (n, "".join("[s%d]" % i for i in range(n)))
     else:
@@ -186,12 +194,20 @@ def main():
     ap.add_argument("--merge-gap", type=float, default=0.05, help="merge windows closer than this (default 0.05 s)")
     ap.add_argument("--force", action="store_true", help="replace an existing output")
     ap.add_argument("--json", action="store_true", help="print a JSON result instead of the result line")
+    app_crop.add_flags(ap)
     args = ap.parse_args()
     try:
         return run(args)
-    except BadInput as e:
+    except (BadInput, app_crop.BadInput) as e:
         log("error: %s" % e)
         return 2
+    except app_crop.Ambiguous as e:
+        log("ambiguous crop: %s" % e)
+        log("pass --crop W:H:X:Y to name the app box, or --no-crop to keep the full frame")
+        return 3
+    except app_crop.FfmpegFailed as e:
+        log("error: %s" % e)
+        return 1
 
 
 def run(args):
@@ -215,6 +231,11 @@ def run(args):
         raise BadInput("--match needs --log")
     if not (args.window or args.from_trimmap or args.log):
         raise BadInput("no windows: give --window, --from-trimmap or --log/--match")
+
+    if args.crop and args.no_crop:
+        raise BadInput("--crop and --no-crop together")
+    crop = app_crop.resolve(str(src), args.crop, args.no_crop)
+    log(app_crop.describe(crop))
 
     duration = probe_duration(src)
     top = min(duration, args.limit) if args.limit else duration
@@ -251,7 +272,8 @@ def run(args):
     total = sum(b - a for a, b in kept)
     log("keeping %d window(s), %.1fs of %.1fs" % (len(kept), total, duration))
 
-    graph = build_graph(kept, args.fps, args.crop_top, args.crop_bottom, args.scale_width)
+    graph = build_graph(kept, args.fps, args.crop_top, args.crop_bottom, args.scale_width,
+                        app_crop.filter_expr(crop))
     tmp = dst.with_name(dst.stem + ".partial.mp4")
     cmd = ["ffmpeg", "-hide_banner", "-v", "error", "-stats", "-y", "-i", str(src), "-filter_complex", graph,
            "-map", "[out]", "-an", "-c:v", "libx264", "-crf", str(args.crf), "-preset", "medium",
@@ -264,11 +286,15 @@ def run(args):
     tmp.replace(dst)
     header = "source %s%s; kept src_start src_end\n" % (
         src.name, (", recording started %s" % wall) if wall else "")
-    seg_path.write_text(header + "".join("%.3f %.3f\n" % w for w in kept))
+    header += app_crop.describe(crop) + "\n"
+    stills = app_crop.write_stills(str(src), crop, str(dst.with_suffix("")))
+    with open(str(seg_path), "w", encoding="utf-8", newline="\n") as f:
+        f.write(header + "".join("%.3f %.3f\n" % w for w in kept))
 
     result = {"ok": True, "input": str(src), "output": str(dst), "segments_file": str(seg_path),
               "source_seconds": round(duration, 3), "kept_seconds": round(total, 3),
-              "windows": [[round(a, 3), round(b, 3)] for a, b in kept], "log_moments": n_moments,
+              "windows": [[round(a, 3), round(b, 3)] for a, b in kept], "log_moments": n_moments, "crop": crop,
+              "crop_stills": stills,
               "size_bytes": dst.stat().st_size}
     if args.json:
         print(json.dumps(result))

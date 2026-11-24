@@ -2,17 +2,21 @@
 """Cut the static stretches out of a device capture.
 
 usage: trim.py <in.mp4> [out.mp4] [--min 1.5] [--keep-in 0.6] [--keep-out 0.4]
+               [--crop W:H:X:Y | --no-crop]
 
 Any freeze longer than --min keeps its first --keep-in and last --keep-out seconds and loses the
-middle, so the viewer still sees each screen settle. Writes:
+middle, so the viewer still sees each screen settle. The frame is also cropped to the app's own
+rectangle (app_crop.py) in the same encode, so a desktop around a window never reaches a viewer;
+--no-crop keeps the full frame, --crop W:H:X:Y names the box. Writes:
   <out>.mp4          CRF 30 H.264 with a subtitle track showing source time, so a trimmed moment can
                      still be matched to logcat
-  <out>.trimmap.txt  kept segments as source start/end seconds, plus the recording's wall-clock start
+  <out>.trimmap.txt  the crop box, then kept segments as source start/end seconds, plus the recording's wall-clock start
                      when <in>.start exists (written by `device record start`)
+  <out>.crop-before.png / .crop-after.png  the cut, to check, when a crop was applied
 
 Needs ffmpeg and ffprobe on PATH. --json prints one JSON object instead of the summary line.
 Exit codes: 0 ok, 1 failed (ffmpeg or ffprobe missing or erroring), 2 bad input (no such file, bad
-arguments).
+arguments), 3 (crop detection ambiguous: pass --crop or --no-crop).
 """
 import argparse
 import json
@@ -21,6 +25,9 @@ import re
 import shutil
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import app_crop  # noqa: E402
 
 
 def probe_duration(path):
@@ -56,6 +63,7 @@ def main():
     ap.add_argument("--keep-in", type=float, default=0.6)
     ap.add_argument("--keep-out", type=float, default=0.4)
     ap.add_argument("--json", action="store_true", help="print one JSON object instead of the summary line")
+    app_crop.add_flags(ap)
     a = ap.parse_args()
     missing = [t for t in ("ffmpeg", "ffprobe") if not shutil.which(t)]
     if missing:
@@ -65,16 +73,32 @@ def main():
     if not os.path.isfile(a.src):
         print("trim.py: no such file: %s" % a.src, file=sys.stderr)
         return 2
+    if a.crop and a.no_crop:
+        print("trim.py: --crop and --no-crop together", file=sys.stderr)
+        return 2
     dst = a.dst or re.sub(r"(-small)?\.mp4$", "", a.src) + "-trimmed.mp4"
 
     try:
-        return run(a, dst)
+        crop = app_crop.resolve(a.src, a.crop, a.no_crop)
+        return run(a, dst, crop)
+    except app_crop.BadInput as e:
+        print("trim.py: %s" % e, file=sys.stderr)
+        return 2
+    except app_crop.Ambiguous as e:
+        print("trim.py: ambiguous crop: %s\npass --crop W:H:X:Y to name the app box, or --no-crop to keep "
+              "the full frame" % e, file=sys.stderr)
+        return 3
+    except app_crop.FfmpegFailed as e:
+        print("trim.py: %s" % e, file=sys.stderr)
+        return 1
     except subprocess.CalledProcessError as e:
         print("trim.py: %s failed (exit %s)" % (os.path.basename(str(e.cmd[0])), e.returncode), file=sys.stderr)
         return 1
 
 
-def run(a, dst):
+def run(a, dst, crop):
+    crop_f = app_crop.filter_expr(crop)
+    print(app_crop.describe(crop), file=sys.stderr)
     total = probe_duration(a.src)
     starts, ends = detect_freezes(a.src, a.min)
     if len(ends) < len(starts):
@@ -92,7 +116,8 @@ def run(a, dst):
 
     parts, labels = [], []
     for i, (s, e) in enumerate(keeps):
-        parts.append("[0:v]trim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[v%d]" % (s, e, i))
+        parts.append("[0:v]%strim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[v%d]"
+                     % (crop_f + "," if crop_f else "", s, e, i))
         labels.append("[v%d]" % i)
     graph = ";".join(parts) + ";" + "".join(labels) + "concat=n=%d:v=1:a=0[out]" % len(keeps)
 
@@ -127,9 +152,11 @@ def run(a, dst):
             f.write("recording started (device clock): %s\n" % wall)
         f.write("source %.1fs -> trimmed %.1fs, %d segments kept (src_start src_end)\n"
                 % (total, t_out, len(keeps)))
+        f.write(app_crop.describe(crop) + "\n")
         for s, e in keeps:
             f.write("%.3f %.3f\n" % (s, e))
     os.remove(srt_path)
+    app_crop.write_stills(a.src, crop, dst[:-4])
     size = os.path.getsize(dst) / 1e6
     if a.json:
         print(json.dumps({"ok": True, "out": dst, "source_seconds": round(total, 1),
