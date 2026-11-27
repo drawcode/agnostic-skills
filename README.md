@@ -1,52 +1,123 @@
-# agnostic-skills
+<p align="center"><img src="assets/hero.svg" alt="agnostic-skills: agent skills that run in any harness, on any OS" width="100%"></p>
 
-Agent skills that work in any harness (Claude Code, Antigravity, Codex, opencode, Cursor, or a
-bare terminal) on macOS, Linux and Windows. Each skill is one self-contained folder: a `SKILL.md`
-the agent reads, an `INSTALL.md`, and `scripts/` in stdlib `python3` (3.9+), with no
-Python dependencies and no network access. A skill that drives outside tools (ffmpeg, adb, Xcode)
-lists them in its `INSTALL.md`.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-fbc743?style=flat-square" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/python-3.8%2B%20stdlib-43e5fb?style=flat-square" alt="python 3.8+, stdlib only">
+  <img src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-62fb43?style=flat-square" alt="macOS, Linux, Windows">
+</p>
+
+**Drop-in skills for coding agents.** Each one is a folder your agent reads, plus small python
+scripts that do the repeatable parts, so the model spends its tokens on judgment.
+
+- Works in Claude Code, Codex, opencode, Cursor, Antigravity, or a bare terminal.
+- Plain `python3`, standard library only. No pip installs, no network calls.
+- Nothing personal baked in: settings come from env vars or a small config file.
 
 ## Skills
 
-| Skill | What it does |
-|---|---|
-| [`deterministic-scripts`](skills/deterministic-scripts/) | Move the repeatable steps of agent work (counts, inventories, parsing, build and device recipes, checks) out of model tokens and into scripts with one contract (`--help`, `--json`, exit codes), read personal and machine values from a home config instead of prompts, and block secrets, emails and home paths with a pre-commit scan. Also scaffolds and lints scripts and finds repeated commands in a transcript. |
-| [`thread-cost`](skills/thread-cost/) | Per-turn and per-thread cost estimates from the harness's own transcript, cost alerts in steps, and a capture-then-clear handoff at a cost or context threshold, so long threads stay cheap. |
-| [`video-trim`](skills/video-trim/) | Crop a screen recording to the app's own window (so the desktop, other windows or chat around it never reach a viewer), cut the dead time out (ffmpeg freeze detection, with a beat kept at each edge and a source-time subtitle track), keep explicit or log-driven windows, scrub notification banners out by OCR, build slowed before/after side-by-sides and contact sheets, and join recordings into one review video with chapters. |
-| [`device-testing`](skills/device-testing/) | Drive an attached Android phone or iPhone from the terminal with one command set: install a build and prove which change it carries, launch, tap, swipe, type, screenshot, record, and wait on log evidence instead of sleeping. Plans run a whole flow in one call; a runner subagent profile and an optional hook keep agents from sending one tap per turn. |
-| [`gameplay-verification`](skills/gameplay-verification/) | Verify a gameplay fix by driving a live round into the failing state and measuring the change, not by reasoning that it compiles. Reach a real round (and know what a scripted shortcut skips), protect the player's save, probe state rather than screenshots, sample rates and sub-second effects from inside the frame, and report what was and was not exercised. Any engine; your engine and game go in add-ons. |
-| [`tiered-delegation`](skills/tiered-delegation/) | Route each unit of agent work to the cheapest model tier that can finish it (architect / workhorse / sprinter): a per-prompt inline-vs-delegate check, lean subagent profiles that load 5-8k tokens instead of ~37k, an escalation protocol, and scripts for the routing and cost math. |
-| [`model-routing`](skills/model-routing/) | Pick the model for any spawn without a pinned profile from what its brief asks for (family alias, never a dated id), and set the harness default so a missed `model` lands on the mid tier, not the driver's. Install with `tiered-delegation`. |
+### Keep agent work cheap
+
+<a href="skills/thread-cost/"><img src="skills/thread-cost/assets/banner.svg" alt="thread-cost" width="100%"></a>
+See what each turn costs, get alerts in steps, and hand off before a thread gets expensive.
+
+<a href="skills/tiered-delegation/"><img src="skills/tiered-delegation/assets/banner.svg" alt="tiered-delegation" width="100%"></a>
+Route each piece of work to the cheapest model tier that can finish it, with lean subagent profiles.
+
+<a href="skills/model-routing/"><img src="skills/model-routing/assets/banner.svg" alt="model-routing" width="100%"></a>
+Pick the model for a spawn from its brief, and make a missed `model` land on the mid tier. Install with `tiered-delegation`.
+
+<a href="skills/deterministic-scripts/"><img src="skills/deterministic-scripts/assets/banner.svg" alt="deterministic-scripts" width="100%"></a>
+Turn repeatable steps into scripts with one contract, and block secrets and home paths before they commit.
+
+### Test and show your app
+
+<a href="skills/device-testing/"><img src="skills/device-testing/assets/banner.svg" alt="device-testing" width="100%"></a>
+Install, tap, swipe, screenshot and wait on logs on an attached Android phone or iPhone, with one command set.
+
+<a href="skills/gameplay-verification/"><img src="skills/gameplay-verification/assets/banner.svg" alt="gameplay-verification" width="100%"></a>
+Prove a gameplay fix in a live round, measure it, and keep the player's save safe. Any engine.
+
+<a href="skills/video-trim/"><img src="skills/video-trim/assets/banner.svg" alt="video-trim" width="100%"></a>
+Crop a recording to the app, cut the frozen stretches, scrub notification banners, and join clips with chapters.
 
 More are on the way.
 
 ## Install a skill
 
-1. Copy `skills/<name>/` to where your harness looks for skills and leave it there; hooks call its
-   scripts by absolute path.
-   - Claude Code: `~/.claude/skills/<name>` (all projects) or `<repo>/.claude/skills/<name>`.
-   - Codex, opencode: `~/.agents/skills/<name>`, or the harness's own skills folder.
-   - Other harnesses: any fixed folder, with a pointer to its `SKILL.md` in your always-loaded rules
-     (`AGENTS.md`, `GEMINI.md`, and so on).
-2. Follow that skill's `INSTALL.md`. Skills with hooks ship an installer that reports first and
-   changes nothing until you pass `--write`, backs up each file it touches, and uninstalls cleanly.
+1. **Copy the folder.** Put `skills/<name>/` where your harness looks for skills, and leave it there
+   (hooks call its scripts by absolute path).
+2. **Follow its `INSTALL.md`.** Installers report first and change nothing until you pass `--write`.
 
-## Conventions
+<details>
+<summary><b>Where each harness looks for skills</b></summary>
 
-[`AUTHORING.md`](AUTHORING.md) explains how these skills are built and how to write your own the same way: configs kept out, base skills with add-ons that override them, a portable contexts folder your harness files point at, and keeping secrets and PII away from the agent.
+| Harness | Folder |
+|---|---|
+| Claude Code | `~/.claude/skills/<name>` (all projects) or `<repo>/.claude/skills/<name>` |
+| Codex, opencode | `~/.agents/skills/<name>`, or the harness's own skills folder |
+| Anything else | Any fixed folder, plus a pointer to its `SKILL.md` in your always-loaded rules (`AGENTS.md`, `GEMINI.md`, and so on) |
 
+</details>
 
-- **No personal or machine values.** Each skill reads its settings from environment variables,
-  then its own `KEY=value` file (`~/.config/<skill>/config.env`, or `%APPDATA%\<skill>\config.env`
-  on Windows), then the defaults. No config file is needed.
-- **State stays outside your repos**, in the per-user state folder
-  (`${XDG_STATE_HOME:-~/.local/state}`, or `%LOCALAPPDATA%` on Windows).
-- **Hooks fail silent.** A hook that hits an error prints nothing and exits 0, so it never breaks a
-  turn.
-- **Base plus add-on.** To tune a skill for your setup without forking it, keep an
-  `addons/<name>.addon.md` beside its `SKILL.md`. Record only what differs (for example your
-  capture step or where your notes live). The agent reads the base first, then the add-on, and
-  the add-on wins on conflict.
+<details>
+<summary><b>What an installer will and won't do</b></summary>
+
+- Reports what it would change, and changes nothing until you pass `--write`.
+- Backs up each file it touches.
+- Uninstalls cleanly.
+- A skill that drives outside tools (ffmpeg, adb, Xcode) lists them in its `INSTALL.md`.
+
+</details>
+
+## How they're built
+
+Every skill follows the same few rules. [`AUTHORING.md`](AUTHORING.md) shows how to write your own
+the same way.
+
+<details>
+<summary><b>No personal or machine values</b></summary>
+
+Each skill reads its settings from environment variables, then its own `KEY=value` file
+(`~/.config/<skill>/config.env`, or `%APPDATA%\<skill>\config.env` on Windows), then the defaults.
+No config file is needed.
+
+</details>
+
+<details>
+<summary><b>State stays outside your repos</b></summary>
+
+State goes in the per-user state folder (`${XDG_STATE_HOME:-~/.local/state}`, or `%LOCALAPPDATA%`
+on Windows), never in your project.
+
+</details>
+
+<details>
+<summary><b>Hooks fail silent</b></summary>
+
+A hook that hits an error prints nothing and exits 0, so it never breaks a turn.
+
+</details>
+
+<details>
+<summary><b>Base plus add-on</b></summary>
+
+To tune a skill for your setup without forking it, keep an `addons/<name>.addon.md` beside its
+`SKILL.md`. Record only what differs (for example your capture step or where your notes live). The
+agent reads the base first, then the add-on, and the add-on wins on conflict.
+
+</details>
+
+## Made by
+
+These skills run every day across our studios' app, game and web work.
+
+<p>
+  <a href="https://drawcode.com"><img src="assets/brand/drawcode.svg" alt="drawcode: design and develop" height="64"></a>&nbsp;
+  <a href="https://drawk.com"><img src="assets/brand/drawk.svg" alt="drawk: product research and develop" height="64"></a>&nbsp;
+  <a href="https://drawlabs.com"><img src="assets/brand/drawlabs.svg" alt="drawlabs: game studio" height="64"></a>
+</p>
+
+[drawcode.com](https://drawcode.com) · [drawk.com](https://drawk.com) · [drawlabs.com](https://drawlabs.com)
 
 ## License
 
