@@ -2,7 +2,7 @@
 
 Agent skills that work in any harness (Claude Code, Antigravity, Codex, opencode, Cursor, or a
 bare terminal) on macOS, Linux and Windows. Each skill is one self-contained folder: a `SKILL.md`
-the agent reads, an `INSTALL.md`, and `scripts/` in stdlib `python3` (3.8+), with no
+the agent reads, an `INSTALL.md`, and `scripts/` in stdlib `python3` (3.9+), with no
 Python dependencies and no network access. A skill that drives outside tools (ffmpeg, adb, Xcode)
 lists them in its `INSTALL.md`.
 

@@ -3,7 +3,7 @@
 Per-turn cost estimates, $5 alerts, and capture-then-clear for agent threads. What it does and
 the rule it enforces: [`SKILL.md`](./SKILL.md).
 
-Needs `python3` 3.8+ (stdlib only). Works on macOS, Linux and Windows (`py` in place of `python3`).
+Needs `python3` 3.9+ (stdlib only). Works on macOS, Linux and Windows (`py` in place of `python3`).
 
 ## What is in it
 

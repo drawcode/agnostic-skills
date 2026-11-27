@@ -106,19 +106,25 @@ def load_records_json(args):
 
 
 # USD per 1M tokens: (input, output, cache_read). Cache writes bill at 1.25x input (5m TTL)
-# or 2x input (1h TTL). Public list prices, Anthropic first-party API, cached 2026-06-24;
+# or 2x input (1h TTL). Public list prices, Anthropic first-party API, cached 2026-10-06;
 # override with --prices-json {"model-id": [in, out, cache_read], ...}. Unknown models cost 0
 # and are listed on stderr.
 CLAUDE_PRICES = {
     "claude-fable-5-1": (10.0, 50.0, 0.25),
+    "claude-mythos-5-1": (10.0, 50.0, 0.25),
     "claude-fable-5": (10.0, 50.0, 1.0),
+    "claude-mythos-5": (10.0, 50.0, 1.0),
     "claude-opus-5-5": (4.0, 20.0, 0.20),
     "claude-opus-5": (5.0, 25.0, 0.50),
     "claude-opus-4-8": (5.0, 25.0, 0.50),
     "claude-opus-4-7": (5.0, 25.0, 0.50),
     "claude-opus-4-6": (5.0, 25.0, 0.50),
+    "claude-opus-4": (5.0, 25.0, 0.50),
+    "claude-sonnet-5-5": (2.0, 10.0, 0.20),
     "claude-sonnet-5": (2.0, 10.0, 0.20),
     "claude-sonnet-4-6": (3.0, 15.0, 0.30),
+    "claude-sonnet-4": (3.0, 15.0, 0.30),
+    "claude-haiku-5-5": (0.10, 0.50, 0.01),
     "claude-haiku-4-5": (1.0, 5.0, 0.10),
 }
 
@@ -325,8 +331,8 @@ def agent_overhead(args):
 
 
 # Lean-profile fixed context by the model a historical subagent ran on (measured 2026-09-30):
-# haiku -> scout, sonnet -> workhorse, opus/fable -> architect (keeps CLAUDE.md, the largest).
-LEAN_FIXED = {"haiku": 5522, "sonnet": 8174, "opus": 16833, "fable": 16833}
+# haiku -> scout, sonnet -> workhorse, opus/fable/mythos -> architect (keeps CLAUDE.md, the largest).
+LEAN_FIXED = {"haiku": 5522, "sonnet": 8174, "opus": 16833, "fable": 16833, "mythos": 16833}
 LEAN_TYPES = {"general-purpose", "Explore", "Plan", "claude"}  # types a lean profile replaces
 
 
@@ -396,7 +402,7 @@ def lean_projection(args):
 
             tot["actual"] += cost(p_in, p_out, p_read, 0)
             tot["lean"] += cost(p_in, p_out, p_read, delta)
-            big = fam in ("opus", "fable")
+            big = fam in ("opus", "fable", "mythos")
             tot["lean_retier"] += cost(*(sonnet if big else (p_in, p_out, p_read)), delta)
     if unknown:
         sys.stderr.write("warning: no price for models (costed at 0): "

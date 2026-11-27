@@ -2,7 +2,7 @@
 
 Routes each unit of agent work to the cheapest model tier that can finish it (architect /
 workhorse / sprinter), with a per-prompt inline-vs-delegate check, an escalation protocol, and
-two scripts that do the routing and cost math so the model does not.
+three scripts that do the routing and cost math so the model does not.
 
 ## What is in it
 
@@ -19,7 +19,7 @@ two scripts that do the routing and cost math so the model does not.
 Install it with its pair, `model-routing`, which picks the model for any spawn that has no
 pinned profile and sets the harness default.
 
-The scripts need only stdlib `python3`, are read-only, touch no network, and take `--help` and
+The scripts need only stdlib `python3` (3.9+), are read-only, touch no network, and take `--help` and
 `--json`. Exit `0` is ok, `2` is bad input.
 
 ## Quick install -- Claude Code, one project
