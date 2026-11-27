@@ -1,10 +1,46 @@
-# Model routing: install
+# Install model-routing
 
-Pick the model for any subagent spawn that has no pinned profile, from what its brief asks for,
-and set the harness default so a missed `model` never inherits a frontier driver's model. The
-rules: [`SKILL.md`](./SKILL.md). Pairs with `tiered-delegation`, which defines the lean profiles.
+Install adds one skill folder and one harness default, so a subagent spawn with no `model` never inherits a frontier driver's model. It is installed together with [`tiered-delegation`](../tiered-delegation/INSTALL.md), which defines the lean profiles. The rules: [`SKILL.md`](./SKILL.md).
 
-## What is in it
+## Requirements
+
+- Stdlib `python3` (3.9+). Read-only, no network.
+- `tiered-delegation` installed beside it.
+
+## Install
+
+1. Put the `model-routing` folder where your harness looks for skills, and install `tiered-delegation` beside it.
+2. Set the harness default from the table in `SKILL.md` (Claude Code shown), then start a new session:
+
+   ```json
+   "env": {"CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"}
+   ```
+
+   Put it in `~/.claude/settings.json`.
+3. Optional: register a tool that has its own runner/operator profiles in `~/.config/tiered-delegation/profiles.json` (schema in `pick_agent.py --help`), so `--needs <tool>` routes to them.
+
+## Check it works
+
+```sh
+python3 <skill>/scripts/pick_model.py --task "grep every caller of Foo and count them"
+python3 <skill>/scripts/test_pick_model.py
+```
+
+## Uninstall
+
+Delete the folder and the env setting.
+
+<details>
+<summary><b>Per-harness locations</b></summary>
+
+- Claude Code: `~/.claude/skills/model-routing`.
+- Codex, opencode: `~/.agents/skills/model-routing`.
+- Others: any fixed folder with a pointer in `AGENTS.md` or `GEMINI.md`.
+
+</details>
+
+<details>
+<summary><b>What is in it</b></summary>
 
 | Path | What it is |
 |---|---|
@@ -14,24 +50,13 @@ rules: [`SKILL.md`](./SKILL.md). Pairs with `tiered-delegation`, which defines t
 | `scripts/pick_agent.py` | The leanest profile for a kind of work; extra tools register in a profiles file (`--help`) |
 | `scripts/test_pick_model.py` | The classifier's regression briefs |
 
-Stdlib `python3` (3.9+), read-only, no network; `--help` and `--json` on each script.
+Each script takes `--help` and `--json`.
 
-## Install
+</details>
 
-1. Put the `model-routing` folder where your harness looks for skills (Claude Code:
-   `~/.claude/skills/model-routing`; Codex, opencode: `~/.agents/skills/model-routing`; others: any
-   fixed folder with a pointer in `AGENTS.md` or `GEMINI.md`). Install `tiered-delegation` beside it.
-2. Set the harness default from the table in `SKILL.md` (Claude Code: `"env":
-   {"CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"}` in `~/.claude/settings.json`), then start a new session.
-3. Check it:
+<details>
+<summary><b>Related skills</b></summary>
 
-   ```sh
-   python3 <skill>/scripts/pick_model.py --task "grep every caller of Foo and count them"
-   python3 <skill>/scripts/test_pick_model.py
-   ```
+Pairs with `tiered-delegation`, which defines the lean profiles.
 
-4. Optional: register a tool that has its own runner/operator profiles in
-   `~/.config/tiered-delegation/profiles.json` (schema in `pick_agent.py --help`), so
-   `--needs <tool>` routes to them.
-
-To remove it, delete the folder and the env setting.
+</details>

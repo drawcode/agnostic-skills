@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 220" width="960" height="220" role="img" aria-label="video-trim: Crop to the app. Cut the dead air. Keep the evidence.">
+<title>video-trim</title>
+<defs>
+<pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="#ffffff" fill-opacity=".07"/></pattern>
+<radialGradient id="glow" cx="0.18" cy="0.5" r="0.45"><stop offset="0" stop-color="#ff5fa2" stop-opacity=".22"/><stop offset="1" stop-color="#ff5fa2" stop-opacity="0"/></radialGradient>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#9aa3ad"/></marker>
+</defs>
+<rect width="960" height="220" rx="20" fill="#0d1014"/>
+<rect width="960" height="220" rx="20" fill="url(#dots)"/>
+<rect width="960" height="220" rx="20" fill="url(#glow)"/>
+<rect x="1" y="1" width="958" height="218" rx="19" fill="none" stroke="#ff5fa2" stroke-opacity=".3" stroke-width="2"/>
+<g transform="translate(36 20)">
+  <rect x="12" y="58" width="216" height="64" rx="6" fill="#11161c" stroke="#9aa3ad" stroke-opacity=".5"/>
+  <g fill="#9aa3ad" fill-opacity=".55">
+    <rect x="20" y="62" width="10" height="7" rx="1"/><rect x="40" y="62" width="10" height="7" rx="1"/><rect x="60" y="62" width="10" height="7" rx="1"/>
+    <rect x="170" y="62" width="10" height="7" rx="1"/><rect x="190" y="62" width="10" height="7" rx="1"/><rect x="210" y="62" width="10" height="7" rx="1"/>
+    <rect x="20" y="111" width="10" height="7" rx="1"/><rect x="40" y="111" width="10" height="7" rx="1"/><rect x="60" y="111" width="10" height="7" rx="1"/>
+    <rect x="170" y="111" width="10" height="7" rx="1"/><rect x="190" y="111" width="10" height="7" rx="1"/><rect x="210" y="111" width="10" height="7" rx="1"/>
+  </g>
+  <rect x="22" y="74" width="52" height="32" rx="3" fill="#ff5fa2" fill-opacity=".85"/>
+  <rect x="166" y="74" width="52" height="32" rx="3" fill="#ff5fa2" fill-opacity=".85"/>
+  <rect x="88" y="74" width="64" height="32" rx="3" fill="#2a3038" stroke="#ff5fa2" stroke-dasharray="5 4"/>
+  <text x="120" y="95" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#9aa3ad">frozen</text>
+  <g transform="translate(120 30) rotate(90)" stroke="#f4f4f2" stroke-width="4" fill="none" stroke-linecap="round">
+    <circle cx="-10" cy="-10" r="8"/><circle cx="-10" cy="10" r="8"/><line x1="-3" y1="-6" x2="22" y2="8"/><line x1="-3" y1="6" x2="22" y2="-8"/>
+  </g>
+  <path d="M88 150 h64" stroke="#ff5fa2" stroke-width="3" stroke-dasharray="4 5"/>
+  <text x="120" y="172" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#ff5fa2">12:40 &#8594; 1:52</text>
+</g>
+<text x="320" y="92" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="42" font-weight="700" fill="#f4f4f2">video-trim</text>
+<text x="322" y="132" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#9aa3ad">Crop to the app. Cut the dead air. Keep the evidence.</text>
+<rect x="322" y="156" width="64" height="26" rx="13" fill="#ff5fa2" fill-opacity=".12" stroke="#ff5fa2" stroke-opacity=".45"/>
+<text x="354" y="173" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#ff5fa2">ffmpeg</text>
+<rect x="396" y="156" width="104" height="26" rx="13" fill="#ff5fa2" fill-opacity=".12" stroke="#ff5fa2" stroke-opacity=".45"/>
+<text x="448" y="173" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#ff5fa2">freeze cuts</text>
+<rect x="510" y="156" width="80" height="26" rx="13" fill="#ff5fa2" fill-opacity=".12" stroke="#ff5fa2" stroke-opacity=".45"/>
+<text x="550" y="173" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#ff5fa2">app crop</text>
+<rect x="600" y="156" width="112" height="26" rx="13" fill="#ff5fa2" fill-opacity=".12" stroke="#ff5fa2" stroke-opacity=".45"/>
+<text x="656" y="173" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#ff5fa2">banner scrub</text>
+</svg>
