@@ -7,7 +7,7 @@ What it does and when to use each script: [`SKILL.md`](./SKILL.md).
 
 | Dependency | For | Install |
 |---|---|---|
-| `python3` 3.8+ | every script (stdlib only) | Windows: `py` in place of `python3` |
+| `python3` 3.9+ | every script (stdlib only) | Windows: `py` in place of `python3` |
 | `ffmpeg` and `ffprobe` on PATH | every script | macOS `brew install ffmpeg`; Debian/Ubuntu `apt install ffmpeg`; Windows `winget install Gyan.FFmpeg` or `choco install ffmpeg` |
 | OCR, only for `scrub_overlays.py` | reading banners | macOS: nothing extra when `swiftc` exists (Xcode command line tools: `xcode-select --install`); the Vision helper is built once on first use. Any OS: `tesseract` on PATH (`brew install tesseract`, `apt install tesseract-ocr`, or the UB Mannheim installer / `choco install tesseract` on Windows) |
 

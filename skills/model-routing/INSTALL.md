@@ -14,7 +14,7 @@ rules: [`SKILL.md`](./SKILL.md). Pairs with `tiered-delegation`, which defines t
 | `scripts/pick_agent.py` | The leanest profile for a kind of work; extra tools register in a profiles file (`--help`) |
 | `scripts/test_pick_model.py` | The classifier's regression briefs |
 
-Stdlib `python3` (3.8+), read-only, no network; `--help` and `--json` on each script.
+Stdlib `python3` (3.9+), read-only, no network; `--help` and `--json` on each script.
 
 ## Install
 

@@ -8,7 +8,7 @@ on log evidence. What it does and when to use each command: [`SKILL.md`](./SKILL
 
 | Dependency | For | Install |
 |---|---|---|
-| `python3` 3.8+ | every script (stdlib only) | Windows: `py` in place of `python3` |
+| `python3` 3.9+ | every script (stdlib only) | Windows: `py` in place of `python3` |
 | `adb` on PATH | Android | Android SDK platform-tools (`brew install android-platform-tools`, `apt install adb`, or the SDK manager) |
 | Xcode (`xcrun devicectl`) | iOS: install, launch, processes, app files | macOS only; a trimmed Xcode is enough |
 | `pymobiledevice3` | iOS: screenshots, logs, USB forward, conditions | `python3 -m venv ~/.venvs/pymobiledevice3 && ~/.venvs/pymobiledevice3/bin/pip install pymobiledevice3` (or set `PYMOBILEDEVICE3` to its path) |
