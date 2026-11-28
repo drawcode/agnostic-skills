@@ -1,8 +1,9 @@
 <p align="center"><img src="assets/hero.svg" alt="agnostic-skills: agent skills that run in any harness, on any OS" width="100%"></p>
 
 <p align="center">
+  <a href="https://drawcode.github.io/agnostic-skills/"><img src="https://img.shields.io/badge/docs-drawcode.github.io-b18cff?style=flat-square" alt="Docs site"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-fbc743?style=flat-square" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/python-3.8%2B%20stdlib-43e5fb?style=flat-square" alt="python 3.8+, stdlib only">
+  <img src="https://img.shields.io/badge/python-3.9%2B%20stdlib-43e5fb?style=flat-square" alt="python 3.9+, stdlib only">
   <img src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-62fb43?style=flat-square" alt="macOS, Linux, Windows">
 </p>
 
@@ -12,6 +13,8 @@ scripts that do the repeatable parts, so the model spends its tokens on judgment
 - Works in Claude Code, Codex, opencode, Cursor, Antigravity, or a bare terminal.
 - Plain `python3`, standard library only. No pip installs, no network calls.
 - Nothing personal baked in: settings come from env vars or a small config file.
+
+Browse the skills on the docs site: **[drawcode.github.io/agnostic-skills](https://drawcode.github.io/agnostic-skills/)**
 
 ## Skills
 
@@ -117,7 +120,7 @@ These skills run every day across our studios' app, game and web work.
   <a href="https://drawlabs.com"><img src="assets/brand/drawlabs.svg" alt="drawlabs: game studio" height="64"></a>
 </p>
 
-[drawcode.com](https://drawcode.com) · [drawk.com](https://drawk.com) · [drawlabs.com](https://drawlabs.com)
+[drawcode.com](https://drawcode.com) · [drawk.com](https://drawk.com) · [drawlabs.com](https://drawlabs.com) · [Docs site](https://drawcode.github.io/agnostic-skills/)
 
 ## License
 

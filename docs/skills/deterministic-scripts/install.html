@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install deterministic-scripts · agnostic-skills</title>
+<meta name="description" content="Install, check and uninstall the deterministic-scripts skill.">
+<meta property="og:title" content="Install deterministic-scripts · agnostic-skills">
+<meta property="og:description" content="Install, check and uninstall the deterministic-scripts skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/deterministic-scripts/install.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/deterministic-scripts/install.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #62fb43">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="./">deterministic-scripts</a><span>/</span>Install</nav>
+<div class="prose"><h1 id="install-deterministic-scripts"><a class="anchor" href="#install-deterministic-scripts" aria-hidden="true">#</a>Install deterministic-scripts</h1>
+<p>Install points your harness at the kit, creates an optional home config file, and optionally turns on a git commit guard. The guard installer reports first and changes nothing until you add <code>--write</code>.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-hidden="true">#</a>Requirements</h2>
+<ul><li><p><code>python3</code> 3.9+ (stdlib only, no network).</p></li><li><p><code>git</code>, only for the commit guard.</p></li></ul>
+<h2 id="install"><a class="anchor" href="#install" aria-hidden="true">#</a>Install</h2>
+<p><code>&lt;scripts&gt;</code> is the path of this kit's <code>scripts/</code> folder in your repo.</p>
+<ol><li><p>Keep the kit in one folder. Never copy it per harness; point each harness at it.</p></li><li><p>Point your harness at the rules (per-harness table below). In the prompt block, set <code>&lt;scripts&gt;</code> to the path above.</p></li><li><p>Create the home config, once per machine, never in a repo:</p>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/homecfg.py path          # where it will be read
+mkdir -p ~/.config/deterministic-scripts
+touch ~/.config/deterministic-scripts/config.env
+chmod 600 ~/.config/deterministic-scripts/config.env</code></pre></li><li><p>Report on the commit guard (changes nothing, exit 0 installed / 1 not):</p>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt;</code></pre></li><li><p>Install the guard, once per clone:</p>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt; --write            # set core.hooksPath (relative)</code></pre></li></ol>
+<h2 id="check-it-works"><a class="anchor" href="#check-it-works" aria-hidden="true">#</a>Check it works</h2>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/test_scripting.py</code></pre>
+<h2 id="uninstall"><a class="anchor" href="#uninstall" aria-hidden="true">#</a>Uninstall</h2>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt; --uninstall          # report what removal would do
+python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt; --uninstall --write  # unset core.hooksPath</code></pre>
+<p>Run it in each repo, then delete the kit folder, the harness link and the pasted block. The home config is yours; nothing else is written.</p>
+<details>
+<summary><b>What is in the kit</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Path</th><th>What it is</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>The rules as a skill</td></tr><tr><td><code>prompt-deterministic-scripts.md</code></td><td>The same rules as one paste-ready block, for harnesses without skills</td></tr><tr><td><code>references/script-contract.md</code></td><td>The script contract and what the linter checks</td></tr><tr><td><code>references/config-convention.md</code></td><td>Home config file: location, format, key naming, extra scan patterns</td></tr><tr><td><code>scripts/homecfg.py</code></td><td>Reads the home config (<code>get</code>, <code>keys</code>, <code>path</code>, <code>check</code>, <code>where</code>); python import too</td></tr><tr><td><code>scripts/new_script.py</code></td><td>Scaffolds a script that already meets the contract and indexes it</td></tr><tr><td><code>scripts/check_scripts.py</code></td><td>Lints scripts against the contract</td></tr><tr><td><code>scripts/repeat_scan.py</code></td><td>Finds repeated commands in a transcript or shell history</td></tr><tr><td><code>scripts/scan_sensitive.py</code>, <code>scrub_sensitive.py</code></td><td>Find and fix personal values and secrets</td></tr><tr><td><code>scripts/install_hooks.py</code>, <code>scripts/hooks/pre-commit</code></td><td>The commit guard</td></tr><tr><td><code>scripts/test_scripting.py</code></td><td>Self-test</td></tr></tbody></table></div>
+<ul><li><p>Scripts need only stdlib <code>python3</code> (3.9+), touch no network, and take <code>--help</code>.</p></li><li><p>Exit codes: <code>0</code> ok, <code>1</code> failed, <code>2</code> bad input.</p></li><li><p>Only the scripts that say <code>--write</code> write.</p></li><li><p>The one shell file, <code>hooks/pre-commit</code>, is a git hook and carries its <code>portability-exception</code>.</p></li></ul>
+</details>
+<details>
+<summary><b>Per-harness setup</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Harness</th><th>Rules</th><th>Skill</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>CLAUDE.md</code> <code>@</code>-imports <code>prompt-deterministic-scripts.md</code> (or <code>AGENTS.md</code> names it)</td><td>link or copy the folder to <code>.claude/skills/deterministic-scripts</code> (project) or <code>~/.claude/skills/deterministic-scripts</code> (user)</td></tr><tr><td>opencode / Codex CLI</td><td><code>AGENTS.md</code> names or includes the prompt block</td><td>its skills dir, as a link</td></tr><tr><td>Cursor / IDE agents</td><td>always-apply project rule pointing at the prompt block</td><td>none</td></tr><tr><td>Raw API / own loop</td><td>orchestrator system prompt</td><td>none</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>Home config and extra scan patterns</b></summary>
+<ul><li><p>On Windows the folder is <code>%APPDATA%\deterministic-scripts</code>.</p></li><li><p>Override with <code>DETERMINISTIC_SCRIPTS_CONFIG</code> (a file) or <code>DETERMINISTIC_SCRIPTS_HOME</code> (a folder).</p></li><li><p>Put <code>KEY=value</code> lines in it (see <code>references/config-convention.md</code>).</p></li><li><p>A script asks for a key with <code>python3 &lt;scripts&gt;/homecfg.py get &lt;key&gt;</code> or <code>homecfg.get(&quot;&lt;key&gt;&quot;)</code>.</p></li><li><p>Personal and machine values come from this file, read by a script. They are never typed into a prompt, a script, a skill or a commit.</p></li></ul>
+<p>Extra things the scanner should block (your own ticket ids, hostnames, project code names) go in the same folder, in any of these:</p>
+<ul><li><p>a <code>patterns.txt</code> with <code>REGEX</code>, <code>NAME :: REGEX</code> or <code>literal: VALUE</code> lines</p></li><li><p><code>pattern_*</code> keys in <code>config.env</code></p></li><li><p>the <code>DETERMINISTIC_SCRIPTS_PATTERNS</code> / <code>DETERMINISTIC_SCRIPTS_LITERALS</code> env vars</p></li></ul>
+<p><code>python3 &lt;scripts&gt;/homecfg.py where</code> lists what is read.</p>
+</details>
+<details>
+<summary><b>Keeping the harness away from auth, configs, PII and secrets</b></summary>
+<p>An AI harness sees everything in its prompt, its tool output and the files it opens. The defence is to never put the value there:</p>
+<ol><li><p><strong>The script holds the access.</strong> Credentials, device ids, accounts and personal details live in the home config (or a keychain / credentials file it points to), outside every repo.</p></li><li><p><strong>The agent asks, the script answers.</strong> The agent names a key or runs a script; the script reads the config and does the work, returning only the result (<code>ok</code>, a count, a path), not the secret. Scripts never echo a secret to stdout.</p></li><li><p><strong>Nothing is pasted.</strong> A secret, token, personal value or machine path is never typed into a prompt, a script, a skill, a brief or a commit message. Prose says <code>&lt;config:key&gt;</code> or <code>~/...</code>.</p></li><li><p><strong>The commit blocks leaks.</strong> <code>hooks/pre-commit</code> scans every line a commit adds, for home paths, emails, private keys, tokens, <code>password=</code>/<code>secret=</code> assignments, <code>.env</code>-style secrets, and every value in the config. A hit stops the commit; fix it with <code>scrub_sensitive.py &lt;dir&gt; --write</code> or move the value to the config.</p></li><li><p><strong>Audit anytime.</strong> <code>scan_sensitive.py --tracked</code> scans what is already committed. History already pushed is not rewritten by any of this: rotate a secret that has leaked.</p></li></ol>
+<p>Hits print redacted (first 3 characters), so the scan output does not leak what it found.</p>
+</details>
+<details>
+<summary><b>The commit guard in detail</b></summary>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt;                    # report: installed or not (exit 0 / 1)
+python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt; --write            # set core.hooksPath (relative)
+python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt; --uninstall        # report what removal would do
+python3 &lt;scripts&gt;/install_hooks.py &lt;repo&gt; --uninstall --write # unset core.hooksPath
+python3 &lt;scripts&gt;/scan_sensitive.py --tracked                # audit what is committed
+python3 &lt;scripts&gt;/scrub_sensitive.py &lt;dir&gt; --write           # fix: ~/... and &lt;config:key&gt;</code></pre>
+<ul><li><p>It refuses (exit 2) when the repo already has its own hooks or another <code>core.hooksPath</code>, so it never silently disables them. Merge by hand.</p></li><li><p><code>core.hooksPath</code> is per-clone git config, so each new clone runs the <code>--write</code> once.</p></li><li><p><code>.sensitive-allow</code> at the repo root lists PUBLIC or FAKE values only (<code>REGEX</code> or <code>GLOB :: REGEX</code>).</p></li></ul>
+</details>
+<div class="actions"><a class="btn" href="./">About deterministic-scripts</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/deterministic-scripts" target="_blank" rel="noopener">Folder on GitHub</a></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

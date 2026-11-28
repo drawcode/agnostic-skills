@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install gameplay-verification · agnostic-skills</title>
+<meta name="description" content="Install, check and uninstall the gameplay-verification skill.">
+<meta property="og:title" content="Install gameplay-verification · agnostic-skills">
+<meta property="og:description" content="Install, check and uninstall the gameplay-verification skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/gameplay-verification/install.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/gameplay-verification/install.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #b18cff">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="./">gameplay-verification</a><span>/</span>Install</nav>
+<div class="prose"><h1 id="install-gameplay-verification"><a class="anchor" href="#install-gameplay-verification" aria-hidden="true">#</a>Install gameplay-verification</h1>
+<p>Install adds one folder and two add-on files you write. It changes nothing else. No scripts, no dependencies, any engine. The rules: <a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/gameplay-verification/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-hidden="true">#</a>Requirements</h2>
+<ul><li><p>A harness that loads skills, or one that reads an always-loaded rules file.</p></li><li><p>Nothing else: no scripts, no dependencies, any engine.</p></li></ul>
+<h2 id="install"><a class="anchor" href="#install" aria-hidden="true">#</a>Install</h2>
+<ol><li><p>Put the <code>gameplay-verification</code> folder where your harness looks for skills (paths below).</p></li><li><p>Write the engine add-on in <code>addons/</code> beside <code>SKILL.md</code> (template below).</p></li><li><p>Write the game add-on in the same folder (template below).</p></li><li><p>If your harness does not load add-ons beside the skill, tell the agent where they are:</p>
+<pre><code class="lang-text">before reporting a gameplay fix, read &lt;skill&gt;/SKILL.md, then &lt;skill&gt;/addons/&lt;engine&gt;.addon.md, then &lt;skill&gt;/addons/&lt;game&gt;.addon.md</code></pre></li></ol>
+<p>The agent reads the base, then the engine add-on, then the game add-on. The later file wins on conflict.</p>
+<h2 id="check-it-works"><a class="anchor" href="#check-it-works" aria-hidden="true">#</a>Check it works</h2>
+<p>Ask the agent to report a gameplay fix. It should read <code>SKILL.md</code> and both add-ons first.</p>
+<h2 id="uninstall"><a class="anchor" href="#uninstall" aria-hidden="true">#</a>Uninstall</h2>
+<p>Delete the folder.</p>
+<details>
+<summary><b>Per-harness locations</b></summary>
+<ul><li><p>Claude Code: <code>~/.claude/skills/gameplay-verification</code>, or <code>&lt;repo&gt;/.claude/skills/gameplay-verification</code>.</p></li><li><p>Codex, opencode: <code>~/.agents/skills/gameplay-verification</code>, or the harness's own skills folder.</p></li><li><p>Other harnesses: any fixed folder, with a pointer to its <code>SKILL.md</code> in your always-loaded rules (<code>AGENTS.md</code>, <code>GEMINI.md</code>, and so on).</p></li></ul>
+</details>
+<details>
+<summary><b>Why add-ons</b></summary>
+<p>The base knows no engine and no game, so it tells the agent what to check, not how to reach it in your project. Two layers work well, each a file in <code>addons/</code> beside <code>SKILL.md</code>.</p>
+</details>
+<details>
+<summary><b>Engine add-on template</b></summary>
+<pre><code class="lang-markdown">---
+name: gameplay-verification-&lt;engine&gt;-addon
+description: How gameplay probes run in &lt;engine&gt;.
+metadata:
+  type: skill-addon
+  extends: ../SKILL.md
+  base_version: &lt;date you checked the base&gt;
+---
+
+# Gameplay verification: &lt;engine&gt;
+
+Read ../SKILL.md first; this file wins on conflict.
+
+- **Probe channel:** how to run code in the live game (a REPL, an editor eval, a debug console,
+  a dev-build HTTP endpoint) and its compile or parse traps.
+- **Play that keeps ticking:** entering play mode, running unfocused, stepping frames.
+- **Frame hooks:** where a per-frame recorder registers, and a store that survives across calls.
+- **Input injection:** keys, gamepad, touch and UI clicks without hardware.
+- **Rendering traps:** what culls or skips work when no camera draws.</code></pre>
+</details>
+<details>
+<summary><b>Game add-on template</b></summary>
+<pre><code class="lang-markdown">---
+name: gameplay-verification-&lt;game&gt;-addon
+description: Reaching and measuring a live round of &lt;game&gt;.
+metadata:
+  type: skill-addon
+  extends: ../SKILL.md
+  base_version: &lt;date you checked the base&gt;
+---
+
+# Gameplay verification: &lt;game&gt;
+
+Read ../SKILL.md and the engine add-on first; this file wins on conflict.
+
+- **Start a round:** the real UI route, and the scripted call chain with what it skips.
+- **&quot;Playing&quot; flag:** the one reading that is only true mid-round.
+- **Mode:** how it is set, and how to read it back.
+- **Save:** where it lives, which values a round overwrites, which are live settings never restored.
+- **Event bus and HUD:** how to listen for who changed what, and how to reach the controls.</code></pre>
+</details>
+<details>
+<summary><b>Related skills</b></summary>
+<p>Pairs with a device-driving skill (for example <code>device-testing</code>) when the round has to run on a phone: one verifies on the device, this one verifies the gameplay.</p>
+</details>
+<div class="actions"><a class="btn" href="./">About gameplay-verification</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/gameplay-verification" target="_blank" rel="noopener">Folder on GitHub</a></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>
