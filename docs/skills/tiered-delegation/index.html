@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tiered-delegation · agnostic-skills</title>
+<meta name="description" content="Routes each unit of agent work to the cheapest model tier that can finish it, and does the routing and cost math in scripts, not in the model.">
+<meta property="og:title" content="tiered-delegation · agnostic-skills">
+<meta property="og:description" content="Routes each unit of agent work to the cheapest model tier that can finish it, and does the routing and cost math in scripts, not in the model.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/tiered-delegation/">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/tiered-delegation/">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #fbc743">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="../../index.html#skills">Skills</a><span>/</span>tiered-delegation</nav>
+<h1 class="sr-only">tiered-delegation</h1>
+<div class="prose"><p align="center"><img src="assets/banner.svg" alt="tiered-delegation" width="100%"></p>
+<div class="actions"><a class="btn primary" href="install.html">Install guide</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/tiered-delegation" target="_blank" rel="noopener">Folder on GitHub</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/blob/main/skills/tiered-delegation/SKILL.md" target="_blank" rel="noopener">SKILL.md</a></div>
+<p><strong>Routes each unit of agent work to the cheapest model tier that can finish it, and does the routing and cost math in scripts, not in the model.</strong></p>
+<blockquote><p>Installed together with <a href="../model-routing/"><code>model-routing</code></a>, which picks the model for any spawn that has no pinned profile and sets the harness default.</p></blockquote>
+<ul><li><p>Three tiers: architect, workhorse, sprinter. You spend the savings on coverage, not a bigger model.</p></li><li><p>A per-prompt check decides inline or delegate, and an escalation protocol handles stuck agents.</p></li><li><p>Lean subagent profiles load 4.8k-8.2k tokens instead of ~37.5k for a generic agent.</p></li></ul>
+<h2 id="quick-start"><a class="anchor" href="#quick-start" aria-hidden="true">#</a>Quick start</h2>
+<ol><li><p>Copy the folder (and <code>model-routing</code> beside it): <a href="../../#install-a-skill">install a skill</a>.</p></li><li><p>Run the estimator once to confirm it works:</p>
+<pre><code class="lang-sh">python3 &lt;repo&gt;/.claude/skills/tiered-delegation/scripts/estimate_delegation.py --tokens 20000</code></pre></li><li><p>Start a session and ask what skills it has. <code>tiered-delegation</code> should be listed. It triggers on multi-step work.</p></li></ol>
+<h2 id="whats-inside"><a class="anchor" href="#whats-inside" aria-hidden="true">#</a>What's inside</h2>
+<div class="table-wrap"><table><thead><tr><th>Script / file</th><th>What it does</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>The rules as a skill</td></tr><tr><td><code>prompt-tiered-delegation.md</code></td><td>The same rules as one paste-ready block, for harnesses without skills</td></tr><tr><td><code>references/</code></td><td>Mini plan template, escalation format, and the rationale, script contracts and A/B benchmark behind the rules</td></tr><tr><td><code>scripts/estimate_delegation.py</code></td><td>Prints <code>VERDICT: delegate|inline</code> from payload size vs agent overhead</td></tr><tr><td><code>scripts/pick_agent.py</code></td><td>Maps what a unit of work does and needs to the leanest profile; extra tools register in a profiles file (<code>--help</code>)</td></tr><tr><td><code>scripts/tally_cost.py</code></td><td>Sums real token and cost per session, compares a delegated run to an inline one, measures each agent type's fixed context (<code>--agent-overhead</code>)</td></tr><tr><td><code>agents/*.md</code></td><td>Lean subagent profiles (runner, scout, sprinter, workhorse, architect): pinned model, minimal tools, no CLAUDE.md, no spawn tool</td></tr></tbody></table></div>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works" aria-hidden="true">#</a>How it works</h2>
+<p>Each prompt, the driver estimates whether delegating beats doing it inline. Below about 6k tokens of agent overhead, inline wins.</p>
+<p>Work that fits goes to the cheapest capable tier, in one batched brief. A stuck agent returns a <code>BLOCKED</code> block and the question is promoted up.</p>
+<details>
+<summary><b>The tiers</b></summary>
+<ul><li><p><strong>Architect:</strong> strongest reasoning model, read-only. Ambiguous scope, root cause, plans, final review.</p></li><li><p><strong>Workhorse:</strong> solid mid model. Implementation that needs judgment about surrounding code.</p></li><li><p><strong>Sprinter:</strong> small, fast model. Pure extraction and mechanical edits with the target named.</p></li></ul>
+<p>Measured: the small tier on judgment scored 1.35 vs 1.86 inline. The mid tier held at 1.91 vs 1.98.</p>
+</details>
+<details>
+<summary><b>Scripts</b></summary>
+<ul><li><p>Stdlib <code>python3</code> (3.9+), read-only, no network.</p></li><li><p>Each takes <code>--help</code> and <code>--json</code>.</p></li><li><p>Exit <code>0</code> is ok, <code>2</code> is bad input.</p></li></ul>
+</details>
+<details>
+<summary><b>Harnesses</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Harness</th><th>Rules go in</th><th>How a subagent gets its tier</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>&lt;repo&gt;/CLAUDE.md</code> or <code>AGENTS.md</code></td><td><code>Agent</code> tool, <code>model: opus | sonnet | haiku</code> per spawn</td></tr><tr><td>opencode</td><td><code>&lt;repo&gt;/AGENTS.md</code></td><td>one subagent per tier in <code>opencode.json</code>, each with a pinned <code>model</code></td></tr><tr><td>Codex CLI</td><td><code>&lt;repo&gt;/AGENTS.md</code></td><td>its subagent or model-selection feature; with none, the loop, scripts and escalation still apply</td></tr><tr><td>Cursor / IDE agents</td><td>an always-apply project rule, or <code>AGENTS.md</code></td><td>the tool's model picker or background-agent model</td></tr><tr><td>Raw API / own loop</td><td>the orchestrator's system prompt</td><td>a spawn tool with a <code>model</code> argument</td></tr></tbody></table></div>
+<p>Details and skill locations: <a href="install.html"><code>INSTALL.md</code></a>.</p>
+</details>
+<details>
+<summary><b>Safety and uninstall</b></summary>
+<ul><li><p>The scripts are read-only and touch no network.</p></li><li><p>To uninstall, delete the skill folder (or its link) and the pasted block. Nothing else is written anywhere.</p></li><li><p>Prefer project scope over a global instructions file, which every other project shares.</p></li></ul>
+</details>
+<details>
+<summary><b>Limits</b></summary>
+<ul><li><p>Driver session only. A spawned subagent never uses it and never spawns another.</p></li><li><p>Terse briefs on trivial work can get refused as suspected prompt injection.</p></li><li><p>On non-Claude models, map tiers by role and A/B the small tier before trusting it past pure extraction.</p></li></ul>
+</details>
+<h2 id="files"><a class="anchor" href="#files" aria-hidden="true">#</a>Files</h2>
+<ul><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/tiered-delegation/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>: what the agent reads</p></li><li><p><a href="install.html"><code>INSTALL.md</code></a>: full install and uninstall</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/tiered-delegation/prompt-tiered-delegation.md" target="_blank" rel="noopener"><code>prompt-tiered-delegation.md</code></a>: paste-ready rules block</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/tiered-delegation/references" target="_blank" rel="noopener"><code>references/</code></a>: templates, protocol and evidence</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/tiered-delegation/agents" target="_blank" rel="noopener"><code>agents/</code></a>: the lean subagent profiles</p></li></ul>
+<p><sub>Part of <a href="../../">agnostic-skills</a> · MIT</sub></p></div>
+<nav class="pager" aria-label="More skills"><a href="../gameplay-verification/"><span>Previous</span>gameplay-verification</a><a class="next" href="../model-routing/"><span>Next</span>model-routing</a></nav>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

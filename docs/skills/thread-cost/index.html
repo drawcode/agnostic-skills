@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>thread-cost · agnostic-skills</title>
+<meta name="description" content="Shows what each agent turn costs and has the model write a handoff before a thread gets expensive.">
+<meta property="og:title" content="thread-cost · agnostic-skills">
+<meta property="og:description" content="Shows what each agent turn costs and has the model write a handoff before a thread gets expensive.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/thread-cost/">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/thread-cost/">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #fbc743">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="../../index.html#skills">Skills</a><span>/</span>thread-cost</nav>
+<h1 class="sr-only">thread-cost</h1>
+<div class="prose"><p align="center"><img src="assets/banner.svg" alt="thread-cost" width="100%"></p>
+<div class="actions"><a class="btn primary" href="install.html">Install guide</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/thread-cost" target="_blank" rel="noopener">Folder on GitHub</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/blob/main/skills/thread-cost/SKILL.md" target="_blank" rel="noopener">SKILL.md</a></div>
+<p><strong>Shows what each agent turn costs and has the model write a handoff before a thread gets expensive.</strong></p>
+<ul><li><p>A cost line after every reply, from the harness's own transcript.</p></li><li><p>Alerts every $5, and a capture block at $15 or a large context.</p></li><li><p>You clear the thread and continue from the handoff, so you stop paying for old context.</p></li></ul>
+<h2 id="quick-start"><a class="anchor" href="#quick-start" aria-hidden="true">#</a>Quick start</h2>
+<ol><li><p>Copy the folder to a place it will stay: <a href="../../#install-a-skill">install a skill</a>.</p></li><li><p>Wire the hooks (<code>&lt;skill&gt;</code> is this folder):</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/thread_hooks_install.py --write</code></pre></li><li><p>Check it reads your session:</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/thread_cost_alert.py status</code></pre></li></ol>
+<h2 id="whats-inside"><a class="anchor" href="#whats-inside" aria-hidden="true">#</a>What's inside</h2>
+<div class="table-wrap"><table><thead><tr><th>Script / file</th><th>What it does</th></tr></thead><tbody><tr><td><code>scripts/thread_cost_alert.py</code></td><td>Cost line, alerts, capture block; <code>status</code> / <code>check</code> / <code>replay</code></td></tr><tr><td><code>scripts/thread_idle_capture.py</code></td><td>Idle wake before the prompt cache lapses (Claude Code)</td></tr><tr><td><code>scripts/thread_handoff.py</code></td><td>Records the handoff; resumes from it after <code>/clear</code> or <code>/compact</code></td></tr><tr><td><code>scripts/thread_hook_antigravity.py</code></td><td>Antigravity hook adapter</td></tr><tr><td><code>scripts/thread_usage.py</code></td><td>Reads Claude Code, opencode, Codex and Antigravity sessions: time, tokens, cost</td></tr><tr><td><code>scripts/model_prices.json</code></td><td>Price table (USD per million tokens, with an <code>as_of</code> date)</td></tr><tr><td><code>scripts/thread_hooks_common.py</code></td><td>Shared config and state helpers</td></tr><tr><td><code>scripts/thread_hooks_install.py</code></td><td>Wires, checks and removes the hooks</td></tr></tbody></table></div>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works" aria-hidden="true">#</a>How it works</h2>
+<p>Every request re-reads the whole conversation, so a long thread pays for its past on every step. The hooks read the transcript, estimate cost, and at a threshold ask the model to write a handoff. You then clear and continue from it.</p>
+<details>
+<summary><b>What fires and when</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Trigger</th><th>Does</th></tr></thead><tbody><tr><td>Every prompt</td><td>Gives the model last turn's cost to end the reply with (off with <code>thread_turn_cost_line=0</code>)</td></tr><tr><td>Every $5</td><td>Alert on screen and to the model</td></tr><tr><td>Live context 200K</td><td>One on-screen note</td></tr><tr><td>$15 (then every $15), or context 300K (then every 100K)</td><td>Blocks the stop once with the capture instruction</td></tr><tr><td>Context 40K past the session start (then every 40K)</td><td>Same capture block; skipped for subagents</td></tr><tr><td>SessionStart after <code>clear</code> or <code>compact</code></td><td>Tells the new session to read the recorded handoff first</td></tr><tr><td>Resume after the cache lifetime on context over 100K</td><td>One-line note suggesting a handoff and a clear</td></tr><tr><td>50 min idle (cost &gt;= $1, context &gt;= 60K)</td><td>Wakes the thread once to capture while the cache is warm</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>Configuration keys</b></summary>
+<p>All optional. Environment wins, then <code>~/.config/thread-cost/config.env</code>, then the default.</p>
+<div class="table-wrap"><table><thead><tr><th>Key</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>thread_cost_alert_usd</code> / <code>thread_cost_alert_step_usd</code></td><td>5 / 5</td><td>first alert, then every step</td></tr><tr><td><code>thread_cost_capture_usd</code> / <code>thread_cost_capture_step_usd</code></td><td>15 / 15</td><td>cost capture</td></tr><tr><td><code>thread_ctx_capture_k</code> / <code>thread_ctx_step_k</code></td><td>300 / 100</td><td>context capture (K tokens)</td></tr><tr><td><code>thread_ctx_growth_k</code></td><td>40</td><td>growth capture; 0 = off</td></tr><tr><td><code>thread_idle_capture_min</code></td><td>50</td><td>idle wake; keep under the 1h cache TTL</td></tr><tr><td><code>thread_turn_cost_line</code></td><td>1</td><td>0 = no per-turn cost line</td></tr><tr><td><code>thread_capture_step</code> / <code>thread_capture_step_file</code></td><td>built in</td><td>the capture step, as one line or a text file</td></tr></tbody></table></div>
+<p>Full list: <code>SKILL.md</code>, Config.</p>
+</details>
+<details>
+<summary><b>Harness support</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Harness</th><th>Cost line, alerts, capture</th><th>Idle wake, resume after clear</th></tr></thead><tbody><tr><td>Claude Code</td><td>automatic (hooks)</td><td>automatic</td></tr><tr><td>Antigravity</td><td>automatic once a conversation has token data</td><td>no</td></tr><tr><td>opencode, Codex, Cursor, a bare terminal</td><td>manual: run <code>status</code> at iteration boundaries</td><td>no</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>Hooks and what they change</b></summary>
+<ul><li><p>Claude Code: five hooks merged into <code>settings.json</code>.</p></li><li><p>Antigravity: one <code>thread-cost</code> hook in <code>config/hooks.json</code>, when <code>~/.gemini</code> exists.</p></li><li><p>Your other hooks are kept and each file is backed up first.</p></li><li><p>Any hook failure prints nothing and exits 0, so a hook never breaks a turn.</p></li></ul>
+</details>
+<details>
+<summary><b>Limits and safety</b></summary>
+<ul><li><p>Cost is an API list-price estimate; a subscription bills differently, so read it as relative size.</p></li><li><p>Scripts are read-only towards the harness and use no network, except the optional Antigravity local server on 127.0.0.1.</p></li><li><p>State lives outside every repo.</p></li><li><p>Uninstall: <code>python3 &lt;skill&gt;/scripts/thread_hooks_install.py --uninstall --write</code>, then delete the folder.</p></li></ul>
+</details>
+<h2 id="files"><a class="anchor" href="#files" aria-hidden="true">#</a>Files</h2>
+<ul><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/thread-cost/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>: what the agent reads</p></li><li><p><a href="install.html"><code>INSTALL.md</code></a>: full install and uninstall</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/thread-cost/config.example.env" target="_blank" rel="noopener"><code>config.example.env</code></a>: every config key, commented</p></li></ul>
+<p><sub>Part of <a href="../../">agnostic-skills</a> · MIT</sub></p></div>
+<nav class="pager" aria-label="More skills"><a href="../deterministic-scripts/"><span>Previous</span>deterministic-scripts</a><a class="next" href="../video-trim/"><span>Next</span>video-trim</a></nav>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

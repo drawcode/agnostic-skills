@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install video-trim · agnostic-skills</title>
+<meta name="description" content="Install, check and uninstall the video-trim skill.">
+<meta property="og:title" content="Install video-trim · agnostic-skills">
+<meta property="og:description" content="Install, check and uninstall the video-trim skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/video-trim/install.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/video-trim/install.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #ff5fa2">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="./">video-trim</a><span>/</span>Install</nav>
+<div class="prose"><h1 id="install-video-trim"><a class="anchor" href="#install-video-trim" aria-hidden="true">#</a>Install video-trim</h1>
+<p>Cut the dead time out of screen recordings, scrub notification banners, and build review videos. Install is a folder copy: it changes nothing else. What it does and when to use each script: <a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/video-trim/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-hidden="true">#</a>Requirements</h2>
+<ul><li><p><code>python3</code> 3.9+ (stdlib only). Windows: <code>py</code> in place of <code>python3</code>.</p></li><li><p><code>ffmpeg</code> and <code>ffprobe</code> on PATH.</p></li><li><p>OCR, only for <code>scrub_overlays.py</code>: <code>swiftc</code> on macOS, or <code>tesseract</code> on any OS.</p></li></ul>
+<h2 id="install"><a class="anchor" href="#install" aria-hidden="true">#</a>Install</h2>
+<ol><li><p>Put the <code>video-trim</code> folder where your harness looks for skills (details in the toggle below).</p>
+<pre><code class="lang-sh">cp -R video-trim ~/.claude/skills/video-trim</code></pre></li><li><p>Check the tools are found:</p>
+<pre><code class="lang-sh">ffmpeg -version &amp;&amp; ffprobe -version</code></pre></li><li><p>Check the scripts run:</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/trim.py --help</code></pre></li><li><p>Check OCR (exits 2 with hints if no OCR backend):</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/scrub_overlays.py --dry-run &lt;any.mp4&gt;</code></pre></li></ol>
+<p>There are no hooks to wire.</p>
+<h2 id="check-it-works"><a class="anchor" href="#check-it-works" aria-hidden="true">#</a>Check it works</h2>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/trim.py --help</code></pre>
+<h2 id="uninstall"><a class="anchor" href="#uninstall" aria-hidden="true">#</a>Uninstall</h2>
+<p>Delete the folder (and the cache folder, see below):</p>
+<pre><code class="lang-sh">rm -rf ~/.claude/skills/video-trim</code></pre>
+<details>
+<summary><b>Per-harness locations</b></summary>
+<ul><li><p>Claude Code: <code>~/.claude/skills/video-trim</code> (all projects), or <code>&lt;repo&gt;/.claude/skills/video-trim</code>.</p></li><li><p>Codex, opencode: <code>~/.agents/skills/video-trim</code>, or the harness's own skills folder.</p></li><li><p>Other harnesses: any fixed folder, with a pointer to its <code>SKILL.md</code> in your always-loaded rules (<code>AGENTS.md</code>, <code>GEMINI.md</code>, and so on).</p></li></ul>
+</details>
+<details>
+<summary><b>Dependencies and install commands</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Dependency</th><th>For</th><th>Install</th></tr></thead><tbody><tr><td><code>python3</code> 3.9+</td><td>every script (stdlib only)</td><td>Windows: <code>py</code> in place of <code>python3</code></td></tr><tr><td><code>ffmpeg</code> and <code>ffprobe</code> on PATH</td><td>every script</td><td>macOS <code>brew install ffmpeg</code>; Debian/Ubuntu <code>apt install ffmpeg</code>; Windows <code>winget install Gyan.FFmpeg</code> or <code>choco install ffmpeg</code></td></tr><tr><td>OCR, only for <code>scrub_overlays.py</code></td><td>reading banners</td><td>macOS: nothing extra when <code>swiftc</code> exists (Xcode command line tools: <code>xcode-select --install</code>); the Vision helper is built once on first use. Any OS: <code>tesseract</code> on PATH (<code>brew install tesseract</code>, <code>apt install tesseract-ocr</code>, or the UB Mannheim installer / <code>choco install tesseract</code> on Windows)</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>Configuration</b></summary>
+<p>Optional. Set in the environment, or as a <code>KEY=VALUE</code> line in <code>~/.config/video-trim/config.env</code> (template: <code>config.example.env</code>).</p>
+<div class="table-wrap"><table><thead><tr><th>Key</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>VIDEO_TRIM_CROP</code></td><td><code>auto</code></td><td><code>off</code> stops <code>trim.py</code> and <code>cut_windows.py</code> cropping to the app by default</td></tr><tr><td><code>VIDEO_TRIM_CACHE</code></td><td><code>~/.cache/video-trim</code>, or <code>%LOCALAPPDATA%\video-trim</code> on Windows</td><td>Folder for the compiled OCR helper</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>What is in it</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Path</th><th>What it is</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>When to use which script, the rules and the traps</td></tr><tr><td><code>scripts/app_crop.py</code></td><td>Find the app's rectangle in a larger capture (used by the two below)</td></tr><tr><td><code>scripts/trim.py</code></td><td>Cut every frozen stretch, keep a beat at each edge</td></tr><tr><td><code>scripts/cut_windows.py</code></td><td>Keep explicit or log-driven windows instead</td></tr><tr><td><code>scripts/scrub_overlays.py</code></td><td>Cut notification banners out (OCR)</td></tr><tr><td><code>scripts/ocr_frames.swift</code></td><td>macOS Vision OCR helper behind <code>scrub_overlays.py --ocr vision</code></td></tr><tr><td><code>scripts/stitch.py</code></td><td>Join recordings into one review video with a chapter list</td></tr><tr><td><code>scripts/side_by_side.py</code></td><td>Slowed before/after of a sub-second effect</td></tr><tr><td><code>scripts/frame_strip.py</code></td><td>Contact sheet to check a cut</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>What it writes</b></summary>
+<ul><li><p>No network access.</p></li><li><p>Nothing is written outside the outputs you name and a per-user cache folder for the compiled OCR helper (<code>VIDEO_TRIM_CACHE</code>, else <code>~/.cache/video-trim</code>, or <code>%LOCALAPPDATA%\video-trim</code> on Windows).</p></li><li><p>To remove it, delete the folder (and the cache folder).</p></li></ul>
+</details>
+<div class="actions"><a class="btn" href="./">About video-trim</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/video-trim" target="_blank" rel="noopener">Folder on GitHub</a></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

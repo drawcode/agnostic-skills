@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install model-routing · agnostic-skills</title>
+<meta name="description" content="Install, check and uninstall the model-routing skill.">
+<meta property="og:title" content="Install model-routing · agnostic-skills">
+<meta property="og:description" content="Install, check and uninstall the model-routing skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/model-routing/install.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/model-routing/install.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #43e5fb">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="./">model-routing</a><span>/</span>Install</nav>
+<div class="prose"><h1 id="install-model-routing"><a class="anchor" href="#install-model-routing" aria-hidden="true">#</a>Install model-routing</h1>
+<p>Install adds one skill folder and one harness default, so a subagent spawn with no <code>model</code> never inherits a frontier driver's model. It is installed together with <a href="../tiered-delegation/install.html"><code>tiered-delegation</code></a>, which defines the lean profiles. The rules: <a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/model-routing/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-hidden="true">#</a>Requirements</h2>
+<ul><li><p>Stdlib <code>python3</code> (3.9+). Read-only, no network.</p></li><li><p><code>tiered-delegation</code> installed beside it.</p></li></ul>
+<h2 id="install"><a class="anchor" href="#install" aria-hidden="true">#</a>Install</h2>
+<ol><li><p>Put the <code>model-routing</code> folder where your harness looks for skills, and install <code>tiered-delegation</code> beside it.</p></li><li><p>Set the harness default from the table in <code>SKILL.md</code> (Claude Code shown), then start a new session:</p>
+<pre><code class="lang-json">&quot;env&quot;: {&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;: &quot;sonnet&quot;}</code></pre>
+<p>Put it in <code>~/.claude/settings.json</code>.</p></li><li><p>Optional: register a tool that has its own runner/operator profiles in <code>~/.config/tiered-delegation/profiles.json</code> (schema in <code>pick_agent.py --help</code>), so <code>--needs &lt;tool&gt;</code> routes to them.</p></li></ol>
+<h2 id="check-it-works"><a class="anchor" href="#check-it-works" aria-hidden="true">#</a>Check it works</h2>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/pick_model.py --task &quot;grep every caller of Foo and count them&quot;
+python3 &lt;skill&gt;/scripts/test_pick_model.py</code></pre>
+<h2 id="uninstall"><a class="anchor" href="#uninstall" aria-hidden="true">#</a>Uninstall</h2>
+<p>Delete the folder and the env setting.</p>
+<details>
+<summary><b>Per-harness locations</b></summary>
+<ul><li><p>Claude Code: <code>~/.claude/skills/model-routing</code>.</p></li><li><p>Codex, opencode: <code>~/.agents/skills/model-routing</code>.</p></li><li><p>Others: any fixed folder with a pointer in <code>AGENTS.md</code> or <code>GEMINI.md</code>.</p></li></ul>
+</details>
+<details>
+<summary><b>What is in it</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Path</th><th>What it is</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>When to pick, the tiers, harness wiring per harness, what not to set</td></tr><tr><td><code>references/context-claude-code-subagent-model.md</code></td><td>How Claude Code resolves a subagent's model, and how to re-verify after an upgrade</td></tr><tr><td><code>scripts/pick_model.py</code></td><td>Classifies a brief as sprinter / workhorse / architect and prints the model alias (or role with <code>--harness any</code>)</td></tr><tr><td><code>scripts/pick_agent.py</code></td><td>The leanest profile for a kind of work; extra tools register in a profiles file (<code>--help</code>)</td></tr><tr><td><code>scripts/test_pick_model.py</code></td><td>The classifier's regression briefs</td></tr></tbody></table></div>
+<p>Each script takes <code>--help</code> and <code>--json</code>.</p>
+</details>
+<details>
+<summary><b>Related skills</b></summary>
+<p>Pairs with <code>tiered-delegation</code>, which defines the lean profiles.</p>
+</details>
+<div class="actions"><a class="btn" href="./">About model-routing</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/model-routing" target="_blank" rel="noopener">Folder on GitHub</a></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

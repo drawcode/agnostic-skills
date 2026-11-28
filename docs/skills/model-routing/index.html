@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>model-routing · agnostic-skills</title>
+<meta name="description" content="Picks the right model for every subagent spawn that has no pinned profile, so a missed `model` never runs on a frontier driver&#x27;s rate.">
+<meta property="og:title" content="model-routing · agnostic-skills">
+<meta property="og:description" content="Picks the right model for every subagent spawn that has no pinned profile, so a missed `model` never runs on a frontier driver&#x27;s rate.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/model-routing/">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/model-routing/">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #43e5fb">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="../../index.html#skills">Skills</a><span>/</span>model-routing</nav>
+<h1 class="sr-only">model-routing</h1>
+<div class="prose"><p align="center"><img src="assets/banner.svg" alt="model-routing" width="100%"></p>
+<div class="actions"><a class="btn primary" href="install.html">Install guide</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/model-routing" target="_blank" rel="noopener">Folder on GitHub</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/blob/main/skills/model-routing/SKILL.md" target="_blank" rel="noopener">SKILL.md</a></div>
+<p><strong>Picks the right model for every subagent spawn that has no pinned profile, so a missed <code>model</code> never runs on a frontier driver's rate.</strong></p>
+<blockquote><p>Installed together with <a href="../tiered-delegation/"><code>tiered-delegation</code></a>, which decides whether to delegate and defines the lean profiles. This skill decides which model runs the rest.</p></blockquote>
+<ul><li><p>Newest model by family alias (<code>haiku</code> / <code>sonnet</code> / <code>opus</code>), never a dated id.</p></li><li><p>Workhorse (mid tier) is the floor for anything un-modelled.</p></li><li><p>Sprinter (small tier) for pure mechanics, with no judgment in the brief.</p></li></ul>
+<h2 id="quick-start"><a class="anchor" href="#quick-start" aria-hidden="true">#</a>Quick start</h2>
+<ol><li><p>Copy the folder (and <code>tiered-delegation</code> beside it): <a href="../../#install-a-skill">install a skill</a>.</p></li><li><p>Set the harness default. On Claude Code, add this to <code>~/.claude/settings.json</code>, then start a new session:</p>
+<pre><code class="lang-json">&quot;env&quot;: {&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;: &quot;sonnet&quot;}</code></pre></li><li><p>Try the picker:</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/pick_model.py --task &quot;grep every caller of Foo and count them&quot;</code></pre></li></ol>
+<h2 id="whats-inside"><a class="anchor" href="#whats-inside" aria-hidden="true">#</a>What's inside</h2>
+<div class="table-wrap"><table><thead><tr><th>Script / file</th><th>What it does</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>When to pick, the tiers, harness wiring per harness, what not to set</td></tr><tr><td><code>references/context-claude-code-subagent-model.md</code></td><td>How Claude Code resolves a subagent's model, and how to re-verify after an upgrade</td></tr><tr><td><code>scripts/pick_model.py</code></td><td>Classifies a brief as sprinter / workhorse / architect and prints the model alias (or role with <code>--harness any</code>)</td></tr><tr><td><code>scripts/pick_agent.py</code></td><td>The leanest profile for a kind of work; extra tools register in a profiles file (<code>--help</code>)</td></tr><tr><td><code>scripts/test_pick_model.py</code></td><td>The classifier's regression briefs</td></tr></tbody></table></div>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works" aria-hidden="true">#</a>How it works</h2>
+<p>The picker reads the brief you are about to send and looks at its verbs. One judgment verb keeps it at workhorse. No signal means workhorse.</p>
+<p>It prints <code>MODEL: &lt;alias&gt; tier=&lt;tier&gt; does=&lt;kind&gt; agent=&lt;profile&gt;</code>. Spawn that profile when it exists, otherwise pass <code>model=&lt;alias&gt;</code>.</p>
+<details>
+<summary><b>Harness wiring</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Harness</th><th>Default subagent model</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>&quot;env&quot;: {&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;: &quot;sonnet&quot;}</code> in user <code>settings.json</code></td></tr><tr><td>opencode</td><td><code>agent.general.model</code> in <code>opencode.json</code>, set to the provider's mid "latest" model</td></tr><tr><td>Codex / Cursor / IDE agents</td><td>the tool's subagent or background-agent model setting, set to its mid model</td></tr><tr><td>Own loop / raw API</td><td>the spawn tool's <code>model</code> argument defaults to the mid alias</td></tr></tbody></table></div>
+<p>Env changes and new agent files load at session start.</p>
+</details>
+<details>
+<summary><b>Claude Code precedence</b></summary>
+<p>Verified against v2.1.314:</p>
+<ol><li><p>A <code>model</code> on the call.</p></li><li><p>The agent's frontmatter <code>model</code>.</p></li><li><p><code>CLAUDE_CODE_SUBAGENT_MODEL</code>.</p></li><li><p>The parent's model.</p></li></ol>
+<p>The default changes only un-modelled spawns. Pinned profiles and explicit <code>opus</code> calls keep their model.</p>
+</details>
+<details>
+<summary><b>What not to set</b></summary>
+<ul><li><p><code>CLAUDE_CODE_SUBAGENT_MODEL_FORCE</code>: it also overrides explicit picks, so an architect call would silently run on the default.</p></li><li><p><code>CLAUDE_CODE_WORKFLOW_SUBAGENT_MODEL</code>: it overrides every workflow <code>agent()</code> model.</p></li><li><p>A hook that rewrites or denies the spawn's <code>model</code>: some session modes refuse a call a hook changed, and a denial makes the driver rewrite the whole brief.</p></li></ul>
+</details>
+<details>
+<summary><b>Tool agents in pairs</b></summary>
+<p>An agent that drives one tool (an engine Editor, a device, a browser) works best split in two:</p>
+<ul><li><p><strong>runner</strong> (sprinter): runs the exact commands the brief gives and returns the output. Failures that need judgment come back <code>BLOCKED</code>.</p></li><li><p><strong>operator</strong> (workhorse): diagnosis, new probes, deciding what to run next.</p></li></ul>
+<p>Register both with <code>pick_agent.py</code> so <code>--needs &lt;tool&gt;</code> routes by kind.</p>
+</details>
+<details>
+<summary><b>Requirements and limits</b></summary>
+<ul><li><p>Stdlib <code>python3</code> (3.9+), read-only, no network. Each script takes <code>--help</code> and <code>--json</code>.</p></li><li><p><code>--harness any</code> prints a role (<code>small</code> / <code>mid</code> / <code>strongest</code>) for a non-Claude harness to map.</p></li><li><p>Architect is never a default. It is picked per spawn.</p></li></ul>
+</details>
+<h2 id="files"><a class="anchor" href="#files" aria-hidden="true">#</a>Files</h2>
+<ul><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/model-routing/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>: what the agent reads</p></li><li><p><a href="install.html"><code>INSTALL.md</code></a>: full install and uninstall</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/model-routing/references/context-claude-code-subagent-model.md" target="_blank" rel="noopener"><code>references/context-claude-code-subagent-model.md</code></a>: evidence and re-verification</p></li></ul>
+<p><sub>Part of <a href="../../">agnostic-skills</a> · MIT</sub></p></div>
+<nav class="pager" aria-label="More skills"><a href="../tiered-delegation/"><span>Previous</span>tiered-delegation</a><a class="next" href="../deterministic-scripts/"><span>Next</span>deterministic-scripts</a></nav>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

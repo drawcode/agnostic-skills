@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>deterministic-scripts · agnostic-skills</title>
+<meta name="description" content="Moves repeatable steps out of model tokens into scripts, and keeps personal values and secrets out of prompts and commits.">
+<meta property="og:title" content="deterministic-scripts · agnostic-skills">
+<meta property="og:description" content="Moves repeatable steps out of model tokens into scripts, and keeps personal values and secrets out of prompts and commits.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/deterministic-scripts/">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/deterministic-scripts/">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #62fb43">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="../../index.html#skills">Skills</a><span>/</span>deterministic-scripts</nav>
+<h1 class="sr-only">deterministic-scripts</h1>
+<div class="prose"><p align="center"><img src="assets/banner.svg" alt="deterministic-scripts" width="100%"></p>
+<div class="actions"><a class="btn primary" href="install.html">Install guide</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/deterministic-scripts" target="_blank" rel="noopener">Folder on GitHub</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/blob/main/skills/deterministic-scripts/SKILL.md" target="_blank" rel="noopener">SKILL.md</a></div>
+<p><strong>Moves repeatable steps out of model tokens into scripts, and keeps personal values and secrets out of prompts and commits.</strong></p>
+<ul><li><p>Counts, greps and parsing run as scripts, so the answer is the same every time.</p></li><li><p>Machine and personal values live in one home config file, never in a prompt or a repo.</p></li><li><p>A pre-commit guard blocks leaks before they land.</p></li></ul>
+<h2 id="quick-start"><a class="anchor" href="#quick-start" aria-hidden="true">#</a>Quick start</h2>
+<ol><li><p>Copy the folder into your project or skills folder: <a href="../../#install-a-skill">install a skill</a>.</p></li><li><p>Run the self-test (<code>&lt;scripts&gt;</code> is the kit's <code>scripts/</code> folder):</p>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/test_scripting.py</code></pre></li><li><p>Find commands you keep repeating:</p>
+<pre><code class="lang-sh">python3 &lt;scripts&gt;/repeat_scan.py &lt;transcript or history&gt;</code></pre></li></ol>
+<h2 id="whats-inside"><a class="anchor" href="#whats-inside" aria-hidden="true">#</a>What's inside</h2>
+<div class="table-wrap"><table><thead><tr><th>Script / file</th><th>What it does</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>The rules as a skill</td></tr><tr><td><code>prompt-deterministic-scripts.md</code></td><td>The same rules as one paste-ready block, for harnesses without skills</td></tr><tr><td><code>references/script-contract.md</code></td><td>The script contract and what the linter checks</td></tr><tr><td><code>references/config-convention.md</code></td><td>Home config file: location, format, key naming, extra scan patterns</td></tr><tr><td><code>scripts/homecfg.py</code></td><td>Reads the home config (<code>get</code>, <code>keys</code>, <code>path</code>, <code>check</code>, <code>where</code>); python import too</td></tr><tr><td><code>scripts/new_script.py</code></td><td>Scaffolds a script that already meets the contract and indexes it</td></tr><tr><td><code>scripts/check_scripts.py</code></td><td>Lints scripts against the contract</td></tr><tr><td><code>scripts/repeat_scan.py</code></td><td>Finds repeated commands in a transcript or shell history</td></tr><tr><td><code>scripts/scan_sensitive.py</code>, <code>scrub_sensitive.py</code></td><td>Find and fix personal values and secrets</td></tr><tr><td><code>scripts/install_hooks.py</code>, <code>scripts/hooks/pre-commit</code></td><td>The commit guard</td></tr><tr><td><code>scripts/test_scripting.py</code></td><td>Self-test</td></tr></tbody></table></div>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works" aria-hidden="true">#</a>How it works</h2>
+<p>Before each task the agent spots steps with a fixed answer and runs or writes a script for them. New scripts start from a scaffold that meets the contract. Values a script needs come from your home config at run time.</p>
+<details>
+<summary><b>The script contract</b></summary>
+<ul><li><p>Stdlib <code>python3</code> (3.9+); shell only with a stated <code>portability-exception</code>.</p></li><li><p>Header doc, <code>--help</code>, <code>--json</code>.</p></li><li><p>Exit <code>0</code> ok, <code>1</code> failed, <code>2</code> bad input.</p></li><li><p>Read-only unless <code>--write</code>.</p></li><li><p>Indexed in the nearest <code>README.md</code> <code>## Index</code>.</p></li><li><p>Full list: <code>references/script-contract.md</code>.</p></li></ul>
+</details>
+<details>
+<summary><b>Home config</b></summary>
+<ul><li><p>Default file: <code>~/.config/deterministic-scripts/config.env</code> (<code>%APPDATA%\deterministic-scripts</code> on Windows).</p></li><li><p>Override with <code>DETERMINISTIC_SCRIPTS_CONFIG</code> (a file) or <code>DETERMINISTIC_SCRIPTS_HOME</code> (a folder).</p></li><li><p>Read a key with <code>python3 &lt;scripts&gt;/homecfg.py get &lt;key&gt;</code> or <code>homecfg.get(&quot;&lt;key&gt;&quot;)</code>.</p></li><li><p>Extra scan patterns: <code>patterns.txt</code>, <code>pattern_*</code> keys, or <code>DETERMINISTIC_SCRIPTS_PATTERNS</code> / <code>DETERMINISTIC_SCRIPTS_LITERALS</code>.</p></li><li><p>Details: <code>references/config-convention.md</code>.</p></li></ul>
+</details>
+<details>
+<summary><b>The commit guard</b></summary>
+<ul><li><p><code>hooks/pre-commit</code> scans every line a commit adds: home paths, emails, private keys, tokens, <code>password=</code>/<code>secret=</code> assignments, and every value in your config.</p></li><li><p>A hit stops the commit. Fix it with <code>scrub_sensitive.py &lt;dir&gt; --write</code> or move the value to the config.</p></li><li><p>Install per clone with <code>install_hooks.py &lt;repo&gt; --write</code>. It reports first and changes nothing without <code>--write</code>.</p></li><li><p>It refuses (exit 2) if the repo already has other hooks.</p></li><li><p><code>.sensitive-allow</code> takes public or fake values only.</p></li></ul>
+</details>
+<details>
+<summary><b>Safety and uninstall</b></summary>
+<ul><li><p>Scripts never echo a secret; scan hits print redacted.</p></li><li><p>Pushed history is not rewritten: rotate any secret that leaked.</p></li><li><p>Uninstall: <code>install_hooks.py &lt;repo&gt; --uninstall --write</code> in each repo, then delete the kit folder, the harness link and the pasted block.</p></li><li><p>The home config is yours; nothing else is written.</p></li></ul>
+</details>
+<details>
+<summary><b>Harness support</b></summary>
+<ul><li><p>Claude Code: link the folder as a skill and <code>@</code>-import the prompt block.</p></li><li><p>opencode / Codex CLI: name the prompt block in <code>AGENTS.md</code>.</p></li><li><p>Cursor / IDE agents: an always-apply rule pointing at the prompt block.</p></li><li><p>Raw API: put the block in the orchestrator system prompt.</p></li></ul>
+</details>
+<h2 id="files"><a class="anchor" href="#files" aria-hidden="true">#</a>Files</h2>
+<ul><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/deterministic-scripts/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>: what the agent reads</p></li><li><p><a href="install.html"><code>INSTALL.md</code></a>: full install and uninstall</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/deterministic-scripts/prompt-deterministic-scripts.md" target="_blank" rel="noopener"><code>prompt-deterministic-scripts.md</code></a>: the rules as one paste-ready block</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/deterministic-scripts/references" target="_blank" rel="noopener"><code>references/</code></a>: script contract and config convention</p></li></ul>
+<p><sub>Part of <a href="../../">agnostic-skills</a> · MIT</sub></p></div>
+<nav class="pager" aria-label="More skills"><a href="../model-routing/"><span>Previous</span>model-routing</a><a class="next" href="../thread-cost/"><span>Next</span>thread-cost</a></nav>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install thread-cost · agnostic-skills</title>
+<meta name="description" content="Install, check and uninstall the thread-cost skill.">
+<meta property="og:title" content="Install thread-cost · agnostic-skills">
+<meta property="og:description" content="Install, check and uninstall the thread-cost skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/thread-cost/install.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/thread-cost/install.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #fbc743">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="./">thread-cost</a><span>/</span>Install</nav>
+<div class="prose"><h1 id="install-thread-cost"><a class="anchor" href="#install-thread-cost" aria-hidden="true">#</a>Install thread-cost</h1>
+<p>Install adds hooks that show per-turn cost estimates, raise $5 alerts, and ask the model to write a handoff before you clear a thread. What it does and the rule it enforces: <a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/thread-cost/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-hidden="true">#</a>Requirements</h2>
+<ul><li><p><code>python3</code> 3.9+ (stdlib only). On Windows use <code>py</code> in place of <code>python3</code>.</p></li><li><p>macOS, Linux or Windows.</p></li></ul>
+<h2 id="install"><a class="anchor" href="#install" aria-hidden="true">#</a>Install</h2>
+<p>The installer reports first and changes nothing until <code>--write</code>.</p>
+<ol><li><p>Put the <code>thread-cost</code> folder where it will stay. The hooks call its scripts by absolute path.</p>
+<ul><li>Claude Code: <code>~/.claude/skills/thread-cost</code> (all projects), or <code>&lt;repo&gt;/.claude/skills/thread-cost</code>.</li><li>Antigravity, opencode, Codex: their skills folder, or any fixed folder.</li></ul></li><li><p>Report what is missing:</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/thread_hooks_install.py</code></pre></li><li><p>Add the missing hooks:</p>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/thread_hooks_install.py --write</code></pre></li><li><p>Restart a running session. Hooks are read at session start.</p></li></ol>
+<h2 id="check-it-works"><a class="anchor" href="#check-it-works" aria-hidden="true">#</a>Check it works</h2>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/thread_cost_alert.py status</code></pre>
+<h2 id="uninstall"><a class="anchor" href="#uninstall" aria-hidden="true">#</a>Uninstall</h2>
+<pre><code class="lang-sh">python3 &lt;skill&gt;/scripts/thread_hooks_install.py --uninstall --write</code></pre>
+<p>Then delete the folder. Optional cleanup: hook state under <code>thread_hooks_state_dir</code> (default <code>${XDG_STATE_HOME:-~/.local/state}/thread-hooks</code>, or <code>%LOCALAPPDATA%\thread-hooks</code> on Windows), and the config file (if you made one) under <code>~/.config/thread-cost/</code>.</p>
+<details>
+<summary><b>What the installer changes</b></summary>
+<ul><li><p>Merges five hooks into Claude Code's <code>settings.json</code>.</p></li><li><p>Adds one hook named <code>thread-cost</code> to Antigravity's <code>config/hooks.json</code> when <code>~/.gemini</code> exists.</p></li><li><p>Keeps your other hooks, and backs up each file first.</p></li><li><p><code>--no-idle</code> leaves out the idle wake.</p></li><li><p><code>--harness</code> limits it to one harness.</p></li><li><p>In Claude Code, the next reply should end with a <code>_Last turn ~$...</code> line. The first turn shows <code>First turn ~$...</code> on screen at Stop instead.</p></li></ul>
+</details>
+<details>
+<summary><b>Harnesses without hooks (opencode, Codex, Cursor, a bare terminal)</b></summary>
+<p>Paste this into the project's <code>AGENTS.md</code> (or the harness's always-loaded rules):</p>
+<pre><code class="lang-markdown">## Thread cost
+At an iteration boundary (a PR opens or merges, before a long wait, after about 40K of new
+context), run `python3 &lt;skill&gt;/scripts/thread_cost_alert.py status`. When it prints CAPTURE NOW,
+do what it says: write the handoff, make no outward writes, then tell the user to start a new
+conversation from the handoff. Delegate screenshot- and log-heavy work to a subagent that returns
+a verdict.</code></pre>
+</details>
+<details>
+<summary><b>Configuration</b></summary>
+<p>Optional; with no config the defaults apply.</p>
+<ul><li><p>Put <code>KEY=value</code> lines in <code>~/.config/thread-cost/config.env</code> (<code>%APPDATA%\thread-cost\config.env</code> on Windows, or the file <code>$THREAD_COST_CONFIG</code> names).</p></li><li><p>Or set the environment variables the script <code>--help</code> lists.</p></li><li><p>All keys are in <code>SKILL.md</code>, Config.</p></li></ul>
+<p>Most setups change only:</p>
+<div class="table-wrap"><table><thead><tr><th>Key</th><th>Example</th><th>Meaning</th></tr></thead><tbody><tr><td><code>thread_capture_step_file</code></td><td><code>~/path/to/capture-step.txt</code></td><td>One paragraph telling the model how this setup records a handoff (which folder, what to update, whether to commit). Without it, the built-in step asks for a handoff doc where the project keeps its notes.</td></tr><tr><td><code>thread_ctx_growth_k</code></td><td><code>80</code> (or <code>0</code>)</td><td>Use if the 40K growth capture fires too often.</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>What is in the folder</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Path</th><th>What it is</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>The rule, what fires, harness support, config keys</td></tr><tr><td><code>scripts/thread_cost_alert.py</code></td><td>Cost line, alerts, capture block; <code>status</code> / <code>check</code> / <code>replay</code></td></tr><tr><td><code>scripts/thread_idle_capture.py</code></td><td>Idle wake before the prompt cache lapses (Claude Code)</td></tr><tr><td><code>scripts/thread_handoff.py</code></td><td>Records the handoff; resumes from it after <code>/clear</code> or <code>/compact</code></td></tr><tr><td><code>scripts/thread_hook_antigravity.py</code></td><td>Antigravity hook adapter</td></tr><tr><td><code>scripts/thread_usage.py</code></td><td>Reads Claude Code, opencode, Codex and Antigravity sessions: time, tokens, cost</td></tr><tr><td><code>scripts/model_prices.json</code></td><td>Price table (USD per million tokens, with an <code>as_of</code> date)</td></tr><tr><td><code>scripts/thread_hooks_common.py</code></td><td>Shared config and state helpers</td></tr><tr><td><code>scripts/thread_hooks_install.py</code></td><td>Wires, checks and removes the hooks</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>Update</b></summary>
+<p>Replace the folder in place; the hooks keep working. Run the installer again if the folder moved.</p>
+</details>
+<div class="actions"><a class="btn" href="./">About thread-cost</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/thread-cost" target="_blank" rel="noopener">Folder on GitHub</a></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

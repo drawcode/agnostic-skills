@@ -12,7 +12,7 @@ were 53% of spend, at $0.114 a request against $0.052 under 100K. A fresh thread
 40-60K and its one cache write costs well under $1, so clearing never "wastes the cache".
 
 `<skill>` below is the folder holding this file; the scripts are in `<skill>/scripts/`. They are
-stdlib `python3` (3.8+), read-only towards the harness, and never touch the network except the
+stdlib `python3` (3.9+), read-only towards the harness, and never touch the network except the
 optional Antigravity local server on 127.0.0.1.
 
 ## The rule

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install tiered-delegation · agnostic-skills</title>
+<meta name="description" content="Install, check and uninstall the tiered-delegation skill.">
+<meta property="og:title" content="Install tiered-delegation · agnostic-skills">
+<meta property="og:description" content="Install, check and uninstall the tiered-delegation skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/tiered-delegation/install.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/tiered-delegation/install.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #fbc743">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="./">tiered-delegation</a><span>/</span>Install</nav>
+<div class="prose"><h1 id="install-tiered-delegation"><a class="anchor" href="#install-tiered-delegation" aria-hidden="true">#</a>Install tiered-delegation</h1>
+<p>Install adds the skill folder, optional lean agent profiles, and optionally a pasted rules block. It routes each unit of agent work to the cheapest model tier that can finish it (architect / workhorse / sprinter), with a per-prompt inline-vs-delegate check, an escalation protocol, and three scripts that do the routing and cost math so the model does not.</p>
+<p>Install it with its pair, <a href="../model-routing/install.html"><code>model-routing</code></a>, which picks the model for any spawn that has no pinned profile and sets the harness default.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-hidden="true">#</a>Requirements</h2>
+<ul><li><p><code>python3</code> 3.9+ (stdlib only).</p></li><li><p>The scripts are read-only, touch no network, and take <code>--help</code> and <code>--json</code>. Exit <code>0</code> is ok, <code>2</code> is bad input.</p></li></ul>
+<h2 id="install"><a class="anchor" href="#install" aria-hidden="true">#</a>Install</h2>
+<p>Claude Code, one project. Nothing changes until you run these.</p>
+<ol><li><p>Copy the skill and make the scripts executable:</p>
+<pre><code class="lang-sh">mkdir -p &lt;repo&gt;/.claude/skills
+cp -R tiered-delegation &lt;repo&gt;/.claude/skills/
+chmod +x &lt;repo&gt;/.claude/skills/tiered-delegation/scripts/*.py</code></pre></li><li><p>Link the lean agent profiles, one symlink per file:</p>
+<pre><code class="lang-sh">mkdir -p &lt;repo&gt;/.claude/agents
+for a in runner scout sprinter workhorse architect; do
+  ln -sfn ../skills/tiered-delegation/agents/$a.md &lt;repo&gt;/.claude/agents/$a.md
+done</code></pre></li><li><p>Optional, to make the rules standing for every prompt: append <code>prompt-tiered-delegation.md</code> to <code>&lt;repo&gt;/CLAUDE.md</code> or <code>AGENTS.md</code>, and set its <code>Estimator:</code> line to <code>.claude/skills/tiered-delegation/scripts/estimate_delegation.py</code>.</p></li><li><p>Install <code>model-routing</code> and set the subagent default model as it describes. Then start a new session, since Claude Code reads agents only at session start.</p></li></ol>
+<h2 id="check-it-works"><a class="anchor" href="#check-it-works" aria-hidden="true">#</a>Check it works</h2>
+<pre><code class="lang-sh">python3 &lt;repo&gt;/.claude/skills/tiered-delegation/scripts/estimate_delegation.py --tokens 20000</code></pre>
+<p>Then start a session in the repo and ask what skills it has; <code>tiered-delegation</code> should be listed. The skill triggers on multi-step work.</p>
+<h2 id="uninstall"><a class="anchor" href="#uninstall" aria-hidden="true">#</a>Uninstall</h2>
+<p>Delete the skill folder (or its link) and the pasted block. Nothing else is written anywhere.</p>
+<details>
+<summary><b>What is in it</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Path</th><th>What it is</th><th>Needed?</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>The rules as a skill</td><td>Harnesses with skills</td></tr><tr><td><code>prompt-tiered-delegation.md</code></td><td>The same rules as one paste-ready block</td><td>Yes, unless the harness loads skills</td></tr><tr><td><code>references/</code></td><td>Mini plan template, escalation format, and the rationale, script contracts and A/B benchmark behind the rules</td><td>Read on demand</td></tr><tr><td><code>scripts/estimate_delegation.py</code></td><td>Prints <code>VERDICT: delegate|inline</code> from payload size vs agent overhead</td><td>Recommended</td></tr><tr><td><code>scripts/pick_agent.py</code></td><td>Maps what a unit of work does and needs to the leanest profile; extra tools register in a profiles file (<code>--help</code>)</td><td>Recommended</td></tr><tr><td><code>scripts/tally_cost.py</code></td><td>Sums real token and cost per session, compares a delegated run to an inline one, measures each agent type's fixed context (<code>--agent-overhead</code>)</td><td>Optional</td></tr><tr><td><code>agents/*.md</code></td><td>Lean subagent profiles (runner, scout, sprinter, workhorse, architect): pinned model, minimal tools, no CLAUDE.md, no spawn tool</td><td>Recommended on Claude Code</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>Per harness</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Harness</th><th>Rules go in</th><th>Skill goes in</th><th>How a subagent gets its tier</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>&lt;repo&gt;/CLAUDE.md</code> or <code>AGENTS.md</code></td><td><code>&lt;repo&gt;/.claude/skills/&lt;name&gt;</code> (symlink)</td><td><code>Agent</code> tool, <code>model: opus | sonnet | haiku</code> per spawn</td></tr><tr><td>opencode</td><td><code>&lt;repo&gt;/AGENTS.md</code></td><td>its skills dir; it can also read <code>.claude/skills/</code></td><td>one subagent per tier in <code>opencode.json</code>, each with a pinned <code>model</code></td></tr><tr><td>Codex CLI</td><td><code>&lt;repo&gt;/AGENTS.md</code></td><td>its skills dir if supported, else paste <code>SKILL.md</code> + references under the rules</td><td>its subagent or model-selection feature; with none, the loop, scripts and escalation still apply</td></tr><tr><td>Cursor / IDE agents</td><td>an always-apply project rule, or <code>AGENTS.md</code></td><td>paste under the rules</td><td>the tool's model picker or background-agent model</td></tr><tr><td>Raw API / own loop</td><td>the orchestrator's system prompt</td><td>--</td><td>give it a spawn tool with a <code>model</code> argument, and give subagents the <code>BLOCKED</code> format in their own prompt</td></tr></tbody></table></div>
+<p>Prefer project scope over a global instructions file. A global file is shared with every other project on the machine. A subagent with no pinned model runs at the driver's rate and throws away most of the saving.</p>
+</details>
+<details>
+<summary><b>Scope: project, machine, shared folder</b></summary>
+<ul><li><p>For every project on the machine, use <code>~/.claude/skills/</code> and <code>~/.claude/agents/</code> instead, and set the subagent default model as the <code>model-routing</code> skill describes, so an un-modelled spawn runs on the mid tier rather than the driver's model.</p></li><li><p>If the project keeps skills canonically somewhere else (a versioned docs folder, say), put the folder there and symlink <code>.claude/skills/tiered-delegation</code> to it rather than copying twice.</p></li></ul>
+</details>
+<details>
+<summary><b>Non-Claude models</b></summary>
+<p>Map by role, not by name: architect = the strongest reasoning model, workhorse = a solid mid model, sprinter = a small, fast model. Before trusting the small tier with anything past pure extraction, run a quick A/B -- the measured rule is that a haiku-class model loses real quality when it writes ranking or summary fields.</p>
+</details>
+<details>
+<summary><b>Rule history</b></summary>
+<ul><li><p><strong>2026-10-31</strong> -- harness default and model routing. A machine had the profiles on disk but linked nowhere, so every spawn was a ~37.5k-token generic agent on the driver's Opus. Now <code>CLAUDE_CODE_SUBAGENT_MODEL=sonnet</code> is the floor for any un-modelled spawn, and <code>model-routing</code> / <code>pick_model.py</code> picks sprinter for pure-mechanics briefs.</p></li><li><p><strong>2026-09-30</strong> -- lean subagent profiles. A generic subagent loaded ~37.5k tokens before its brief (every tool, MCP server, skill list and CLAUDE.md); the profiles load 4.8k-8.2k (16.8k for the architect, which keeps CLAUDE.md), measured on the same one-line task. Subagents were 47% of delegated spend across 126 spawns, so this is the cheapest lever the kit has.</p></li><li><p><strong>2026-09-25</strong> -- the per-prompt loop is standing: estimate with the script, delegate what fits, tally when cheap, script every deterministic step. Everything stays harness-agnostic.</p></li><li><p><strong>2026-09-24</strong> -- on a frontier driver, all mechanical work leaves the session, batched into one brief. The only inline exception is a lone scout call.</p></li><li><p><strong>2026-09-24</strong> -- the small tier does pure extraction only. Judgment scored 1.35 vs 1.86 inline; the mid tier held at 1.91 vs 1.98.</p></li><li><p><strong>2026-09-24</strong> -- <code>fable</code> is architect tier or above, not a cheap lane.</p></li><li><p><strong>Earlier</strong> -- the inline floor: below ~6k tokens of agent overhead, delegation costs more than inline, and terse briefs on trivial work get refused as suspected prompt injection.</p></li></ul>
+</details>
+<div class="actions"><a class="btn" href="./">About tiered-delegation</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/tiered-delegation" target="_blank" rel="noopener">Folder on GitHub</a></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

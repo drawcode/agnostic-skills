@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agnostic-skills</title>
+<meta name="description" content="Drop-in skills for coding agents. Each one is a folder your agent reads, plus small python scripts that do the repeatable parts, so the model spends its tokens on judgment.">
+<meta property="og:title" content="agnostic-skills">
+<meta property="og:description" content="Drop-in skills for coding agents. Each one is a folder your agent reads, plus small python scripts that do the repeatable parts, so the model spends its tokens on judgment.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="site.css">
+</head>
+<body style="--accent: #43e5fb">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="index.html#skills" aria-current="page">Skills</a><a href="index.html#install-a-skill">Install</a><a href="authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<div class="prose home">
+<p align="center"><img src="assets/hero.svg" alt="agnostic-skills: agent skills that run in any harness, on any OS" width="100%"></p>
+<p align="center">
+<a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-fbc743?style=flat-square" alt="MIT license"></a>
+<img src="https://img.shields.io/badge/python-3.9%2B%20stdlib-43e5fb?style=flat-square" alt="python 3.9+, stdlib only">
+<img src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-62fb43?style=flat-square" alt="macOS, Linux, Windows">
+</p>
+<p><strong>Drop-in skills for coding agents.</strong> Each one is a folder your agent reads, plus small python scripts that do the repeatable parts, so the model spends its tokens on judgment.</p>
+<ul><li><p>Works in Claude Code, Codex, opencode, Cursor, Antigravity, or a bare terminal.</p></li><li><p>Plain <code>python3</code>, standard library only. No pip installs, no network calls.</p></li><li><p>Nothing personal baked in: settings come from env vars or a small config file.</p></li></ul>
+<h2 id="skills"><a class="anchor" href="#skills" aria-hidden="true">#</a>Skills</h2>
+<section class="group"><h3 id="keep-agent-work-cheap">Keep agent work cheap</h3><div class="cards">
+<article class="card" style="--accent: #fbc743"><a class="card-img" href="skills/thread-cost/"><img src="skills/thread-cost/assets/banner.svg" alt="thread-cost" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/thread-cost/">thread-cost</a></h4><p>See what each turn costs, get alerts in steps, and hand off before a thread gets expensive.</p><p class="card-links"><a href="skills/thread-cost/">Read the guide</a><a href="skills/thread-cost/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/thread-cost" target="_blank" rel="noopener">GitHub</a></p></div></article>
+<article class="card" style="--accent: #fbc743"><a class="card-img" href="skills/tiered-delegation/"><img src="skills/tiered-delegation/assets/banner.svg" alt="tiered-delegation" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/tiered-delegation/">tiered-delegation</a></h4><p>Route each piece of work to the cheapest model tier that can finish it, with lean subagent profiles.</p><p class="card-links"><a href="skills/tiered-delegation/">Read the guide</a><a href="skills/tiered-delegation/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/tiered-delegation" target="_blank" rel="noopener">GitHub</a></p></div></article>
+<article class="card" style="--accent: #43e5fb"><a class="card-img" href="skills/model-routing/"><img src="skills/model-routing/assets/banner.svg" alt="model-routing" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/model-routing/">model-routing</a></h4><p>Pick the model for a spawn from its brief, and make a missed <code>model</code> land on the mid tier. Install with <code>tiered-delegation</code>.</p><p class="card-links"><a href="skills/model-routing/">Read the guide</a><a href="skills/model-routing/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/model-routing" target="_blank" rel="noopener">GitHub</a></p></div></article>
+<article class="card" style="--accent: #62fb43"><a class="card-img" href="skills/deterministic-scripts/"><img src="skills/deterministic-scripts/assets/banner.svg" alt="deterministic-scripts" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/deterministic-scripts/">deterministic-scripts</a></h4><p>Turn repeatable steps into scripts with one contract, and block secrets and home paths before they commit.</p><p class="card-links"><a href="skills/deterministic-scripts/">Read the guide</a><a href="skills/deterministic-scripts/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/deterministic-scripts" target="_blank" rel="noopener">GitHub</a></p></div></article>
+</div></section>
+<section class="group"><h3 id="test-and-show-your-app">Test and show your app</h3><div class="cards">
+<article class="card" style="--accent: #43e5fb"><a class="card-img" href="skills/device-testing/"><img src="skills/device-testing/assets/banner.svg" alt="device-testing" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/device-testing/">device-testing</a></h4><p>Install, tap, swipe, screenshot and wait on logs on an attached Android phone or iPhone, with one command set.</p><p class="card-links"><a href="skills/device-testing/">Read the guide</a><a href="skills/device-testing/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/device-testing" target="_blank" rel="noopener">GitHub</a></p></div></article>
+<article class="card" style="--accent: #b18cff"><a class="card-img" href="skills/gameplay-verification/"><img src="skills/gameplay-verification/assets/banner.svg" alt="gameplay-verification" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/gameplay-verification/">gameplay-verification</a></h4><p>Prove a gameplay fix in a live round, measure it, and keep the player's save safe. Any engine.</p><p class="card-links"><a href="skills/gameplay-verification/">Read the guide</a><a href="skills/gameplay-verification/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/gameplay-verification" target="_blank" rel="noopener">GitHub</a></p></div></article>
+<article class="card" style="--accent: #ff5fa2"><a class="card-img" href="skills/video-trim/"><img src="skills/video-trim/assets/banner.svg" alt="video-trim" width="960" height="220" loading="lazy"></a><div class="card-body"><h4><a href="skills/video-trim/">video-trim</a></h4><p>Crop a recording to the app, cut the frozen stretches, scrub notification banners, and join clips with chapters.</p><p class="card-links"><a href="skills/video-trim/">Read the guide</a><a href="skills/video-trim/install.html">Install</a><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/video-trim" target="_blank" rel="noopener">GitHub</a></p></div></article>
+</div></section>
+<p class="more">More are on the way.</p>
+<h2 id="install-a-skill"><a class="anchor" href="#install-a-skill" aria-hidden="true">#</a>Install a skill</h2>
+<ol><li><p><strong>Copy the folder.</strong> Put <code>skills/&lt;name&gt;/</code> where your harness looks for skills, and leave it there (hooks call its scripts by absolute path).</p></li><li><p><strong>Follow its <code>INSTALL.md</code>.</strong> Installers report first and change nothing until you pass <code>--write</code>.</p></li></ol>
+<details>
+<summary><b>Where each harness looks for skills</b></summary>
+<div class="table-wrap"><table><thead><tr><th>Harness</th><th>Folder</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>~/.claude/skills/&lt;name&gt;</code> (all projects) or <code>&lt;repo&gt;/.claude/skills/&lt;name&gt;</code></td></tr><tr><td>Codex, opencode</td><td><code>~/.agents/skills/&lt;name&gt;</code>, or the harness's own skills folder</td></tr><tr><td>Anything else</td><td>Any fixed folder, plus a pointer to its <code>SKILL.md</code> in your always-loaded rules (<code>AGENTS.md</code>, <code>GEMINI.md</code>, and so on)</td></tr></tbody></table></div>
+</details>
+<details>
+<summary><b>What an installer will and won't do</b></summary>
+<ul><li><p>Reports what it would change, and changes nothing until you pass <code>--write</code>.</p></li><li><p>Backs up each file it touches.</p></li><li><p>Uninstalls cleanly.</p></li><li><p>A skill that drives outside tools (ffmpeg, adb, Xcode) lists them in its <code>INSTALL.md</code>.</p></li></ul>
+</details>
+<h2 id="how-theyre-built"><a class="anchor" href="#how-theyre-built" aria-hidden="true">#</a>How they're built</h2>
+<p>Every skill follows the same few rules. <a href="authoring.html"><code>AUTHORING.md</code></a> shows how to write your own the same way.</p>
+<details>
+<summary><b>No personal or machine values</b></summary>
+<p>Each skill reads its settings from environment variables, then its own <code>KEY=value</code> file (<code>~/.config/&lt;skill&gt;/config.env</code>, or <code>%APPDATA%\&lt;skill&gt;\config.env</code> on Windows), then the defaults. No config file is needed.</p>
+</details>
+<details>
+<summary><b>State stays outside your repos</b></summary>
+<p>State goes in the per-user state folder (<code>${XDG_STATE_HOME:-~/.local/state}</code>, or <code>%LOCALAPPDATA%</code> on Windows), never in your project.</p>
+</details>
+<details>
+<summary><b>Hooks fail silent</b></summary>
+<p>A hook that hits an error prints nothing and exits 0, so it never breaks a turn.</p>
+</details>
+<details>
+<summary><b>Base plus add-on</b></summary>
+<p>To tune a skill for your setup without forking it, keep an <code>addons/&lt;name&gt;.addon.md</code> beside its <code>SKILL.md</code>. Record only what differs (for example your capture step or where your notes live). The agent reads the base first, then the add-on, and the add-on wins on conflict.</p>
+</details>
+<h2 id="made-by"><a class="anchor" href="#made-by" aria-hidden="true">#</a>Made by</h2>
+<p>These skills run every day across our studios' app, game and web work.</p>
+<p>
+<a href="https://drawcode.com"><img src="assets/brand/drawcode.svg" alt="drawcode: design and develop" height="64"></a>&nbsp;
+<a href="https://drawk.com"><img src="assets/brand/drawk.svg" alt="drawk: product research and develop" height="64"></a>&nbsp;
+<a href="https://drawlabs.com"><img src="assets/brand/drawlabs.svg" alt="drawlabs: game studio" height="64"></a>
+</p>
+<p><a href="https://drawcode.com" target="_blank" rel="noopener">drawcode.com</a> · <a href="https://drawk.com" target="_blank" rel="noopener">drawk.com</a> · <a href="https://drawlabs.com" target="_blank" rel="noopener">drawlabs.com</a> · <a href="https://drawcode.github.io/agnostic-skills/" target="_blank" rel="noopener">Docs site</a></p>
+<h2 id="license"><a class="anchor" href="#license" aria-hidden="true">#</a>License</h2>
+<p><a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a></p>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing agnostic skills · agnostic-skills</title>
+<meta name="description" content="How the skills are built, so you can write your own that run in any harness, on any OS.">
+<meta property="og:title" content="Writing agnostic skills · agnostic-skills">
+<meta property="og:description" content="How the skills are built, so you can write your own that run in any harness, on any OS.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/authoring.html">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/authoring.html">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="site.css">
+</head>
+<body style="--accent: #43e5fb">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="index.html#skills">Skills</a><a href="index.html#install-a-skill">Install</a><a href="authoring.html" aria-current="page">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a><span>/</span>Authoring</nav>
+<div class="prose"><details class="toc"><summary><b>On this page</b></summary><ul><li><a href="#1-what-makes-a-skill-agnostic">1. What makes a skill agnostic</a></li><li><a href="#2-keep-configs-out-the-lookup-order">2. Keep configs out: the lookup order</a></li><li><a href="#3-overriding-a-skill-base-plus-add-ons">3. Overriding a skill: base plus add-ons</a></li><li><a href="#4-your-own-contexts-one-portable-home-harness-files-point-at-it">4. Your own contexts: one portable home, harness files point at it</a></li><li><a href="#5-keep-auth-configs-pii-and-secrets-away-from-the-agent">5. Keep auth, configs, PII and secrets away from the agent</a></li><li><a href="#6-deterministic-scripts-do-the-repeatable-work">6. Deterministic scripts do the repeatable work</a></li><li><a href="#7-moving-a-skill-from-private-to-public">7. Moving a skill from private to public</a></li><li><a href="#checklist-for-a-new-skill">Checklist for a new skill</a></li></ul></details><h1 id="writing-agnostic-skills"><a class="anchor" href="#writing-agnostic-skills" aria-hidden="true">#</a>Writing agnostic skills</h1>
+<p>How the skills in this repo are built, so you can write your own the same way: one folder that works in any harness, on any OS, for anyone, with everything personal kept out of it. It pairs with the <a href="skills/deterministic-scripts/"><code>deterministic-scripts</code></a> skill, which does the scripting and scanning half.</p>
+<h2 id="1-what-makes-a-skill-agnostic"><a class="anchor" href="#1-what-makes-a-skill-agnostic" aria-hidden="true">#</a>1. What makes a skill agnostic</h2>
+<p>A skill is a folder: <code>SKILL.md</code> (what the agent reads), <code>INSTALL.md</code> (what a person follows), and <code>scripts/</code> (stdlib <code>python3</code>). It is agnostic when nothing in it depends on who runs it:</p>
+<div class="table-wrap"><table><thead><tr><th>Never in a skill</th><th>Put it here instead</th></tr></thead><tbody><tr><td>Your name, email, user name, host name, home path</td><td>Nowhere: scripts discover what they need at run time</td></tr><tr><td>Device serials, IPs, team ids, bundle ids, project names</td><td>The skill's config file, or an add-on (section 3)</td></tr><tr><td>Tokens, passwords, API keys, cookies, signing details</td><td>A home config file only scripts read (section 5)</td></tr><tr><td>One project's screens, folders, build steps</td><td>An add-on</td></tr><tr><td>Harness-only syntax as the only way in</td><td>Plain markdown plus scripts any harness can call</td></tr></tbody></table></div>
+<p>Write scripts in stdlib <code>python3</code> so they run the same on macOS, Linux and Windows: <code>pathlib</code>, <code>subprocess.run([...])</code> with a list (never <code>shell=True</code>), <code>tempfile</code> for temp paths, and <code>encoding=&quot;utf-8&quot;</code> on every open. Aim at the oldest python3 a machine ships (3.9 on macOS). A shell script is the exception, used only when nothing else can do the job, and says why in a header line.</p>
+<h2 id="2-keep-configs-out-the-lookup-order"><a class="anchor" href="#2-keep-configs-out-the-lookup-order" aria-hidden="true">#</a>2. Keep configs out: the lookup order</h2>
+<p>Every setting a skill needs is looked up in this order, and the first hit wins:</p>
+<ol><li><p>An environment variable named after the skill (<code>VIDEO_TRIM_FPS=30</code>).</p></li><li><p>The skill's own file, <code>~/.config/&lt;skill&gt;/config.env</code> (<code>%APPDATA%\&lt;skill&gt;\config.env</code> on Windows), one <code>KEY=value</code> per line.</p></li><li><p>A built-in default that works for most people.</p></li></ol>
+<p>So no one has to create a config file to start, and the values that do differ per person never sit in the skill. The skill folder stays read-only: state (logs, caches, captures) goes in the per-user state folder (<code>${XDG_STATE_HOME:-~/.local/state}/&lt;skill&gt;</code>, <code>%LOCALAPPDATA%</code> on Windows), never in your repos and never in the skill.</p>
+<p>Ship a <code>config.example.env</code> with every key commented out and explained, so a person copies it instead of guessing.</p>
+<h2 id="3-overriding-a-skill-base-plus-add-ons"><a class="anchor" href="#3-overriding-a-skill-base-plus-add-ons" aria-hidden="true">#</a>3. Overriding a skill: base plus add-ons</h2>
+<p>Do not fork a skill to tune it for one project. Keep the <strong>base</strong> generic and write an <strong>add-on</strong> that records only what differs:</p>
+<pre><code class="lang-yaml">---
+name: video-trim-myproject-addon
+description: What this changes about the base, for this project, in one line
+metadata:
+  type: skill-addon
+  extends: ../video-trim/SKILL.md
+  base_version: 2026-11-23    # the base you checked the delta against
+---
+
+# video-trim: myproject
+
+- Recordings come from the in-game recorder at 60 fps; pass --fps 60.
+- The notification banner sits in the top 90 px on this device; scrub with --region top:90.</code></pre>
+<ul><li><p><strong>Reading order:</strong> the base first, then the add-on. <strong>The add-on wins on a conflict.</strong></p></li><li><p><strong>Never restate the base.</strong> Cite it. A copy rots when the base changes.</p></li><li><p><strong>Reuse the base's scripts</strong> and pass the project as an argument or a config key. A script only one project needs lives in that project.</p></li><li><p><strong>When the base changes,</strong> re-read every add-on whose <code>base_version</code> is older before trusting it.</p></li><li><p>Add-ons are private by default. They hold exactly the things the base keeps out, so they never ship with the base.</p></li></ul>
+<p>The harness pointer names both files, in order: "for video work, read <code>skills/video-trim/SKILL.md</code>, then <code>addons/myproject.addon.md</code>".</p>
+<h2 id="4-your-own-contexts-one-portable-home-harness-files-point-at-it"><a class="anchor" href="#4-your-own-contexts-one-portable-home-harness-files-point-at-it" aria-hidden="true">#</a>4. Your own contexts: one portable home, harness files point at it</h2>
+<p>Keep everything you want agents to know (skills, add-ons, rules, feedback, memory, project notes) in one folder that you own, and let each harness's own file point into it. That folder can be:</p>
+<ul><li><p>a <strong>local folder</strong> (<code>~/contexts</code>), for one machine, or</p></li><li><p>a <strong>git repo</strong> you clone on every machine, or mount into each project as a <strong>submodule</strong> at <code>contexts/</code>, so every repo and every machine reads the same copy.</p></li></ul>
+<p>A layout that works:</p>
+<pre><code class="lang-text">contexts/
+  skills/                 base skills (yours, or vendored from this repo)
+    video-trim/
+  &lt;area&gt;/skills/addons/   your add-ons, next to the area they tune
+  rules/                  standing rules: how you want work done
+  feedback/               corrections and confirmed approaches, one note per file
+  memory/                 facts agents should keep across sessions
+  scripts/                deterministic scripts (section 6)</code></pre>
+<p>The standard harness files then hold <strong>pointers only</strong>, never copies:</p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Read by</th><th>What it holds</th></tr></thead><tbody><tr><td><code>AGENTS.md</code></td><td>Codex, opencode, Cursor and most others</td><td>"Read <code>contexts/rules/core.md</code>. Skills are in <code>contexts/skills/</code>."</td></tr><tr><td><code>CLAUDE.md</code></td><td>Claude Code</td><td><code>@contexts/rules/core.md</code> imports, plus the same pointers</td></tr><tr><td><code>GEMINI.md</code></td><td>Gemini, Antigravity</td><td>The same pointers</td></tr><tr><td><code>MEMORY.md</code></td><td>Claude Code auto-memory</td><td>One line per memory, each naming its file under <code>contexts/memory/</code> or <code>contexts/feedback/</code></td></tr></tbody></table></div>
+<p>Skills are linked, not copied: <code>.claude/skills/video-trim -&gt; ../../contexts/skills/video-trim</code> (a relative symlink), or the harness's skills folder pointed at <code>contexts/skills/</code>. Change a skill once and every harness and machine sees it.</p>
+<p>Rules for the pointers:</p>
+<ul><li><p>Relative paths only (<code>contexts/skills/x</code>, <code>../rules/y.md</code>), so a fresh clone works anywhere.</p></li><li><p>A machine path (where one clone sits) may appear only in a machine-local file such as <code>~/.claude/...</code>, never in contexts or a repo.</p></li><li><p>Moving a file updates every pointer in the same change.</p></li><li><p>Keep the always-loaded index small (one line per entry). Detail lives in the files it points to, which the agent reads when the topic comes up.</p></li></ul>
+<p>Because the content sits in your own folder, it is not tied to any one harness: switch harness, add a pointer file, and the same skills and rules load.</p>
+<p><strong>Mixing this repo with your own:</strong> install a base skill from here into <code>contexts/skills/</code> (or as a submodule), put your add-ons beside your areas, and the harness reads base then add-on. You can update the base from this repo without touching your add-ons.</p>
+<h2 id="5-keep-auth-configs-pii-and-secrets-away-from-the-agent"><a class="anchor" href="#5-keep-auth-configs-pii-and-secrets-away-from-the-agent" aria-hidden="true">#</a>5. Keep auth, configs, PII and secrets away from the agent</h2>
+<p>An agent reads whatever is in its context and may echo it into a commit, a log or a chat. So sensitive values should never reach the context in the first place:</p>
+<ol><li><p><strong>Values live in a home config file</strong> outside every repo (<code>~/.config/&lt;tool&gt;/config.env</code>, <code>chmod 600</code>), never in a skill, a prompt, a script, a rules file or an <code>.env</code> inside a repo.</p></li><li><p><strong>Scripts read the file and use the value; they never print it.</strong> An agent that needs a value runs the script (<code>deploy.py --target staging</code>) instead of reading the file. Output names the key (<code>using API token from config</code>), never the value. <code>--json</code> output follows the same rule.</p></li><li><p><strong>Prose uses placeholders:</strong> write <code>&lt;config:api_token&gt;</code> or <code>~/...</code>, never the value or a full home path.</p></li><li><p><strong>Tell the harness not to read secrets.</strong> Most harnesses have deny rules: in Claude Code, <code>permissions.deny</code> entries such as <code>Read(~/.ssh/**)</code>, <code>Read(~/.config/&lt;tool&gt;/**)</code>, <code>Read(**/.env)</code>; in others, the ignore file the harness supports. Scripts still read them; the agent does not.</p></li><li><p><strong>Scan before every commit.</strong> A pre-commit hook runs the sensitive-value scan from <code>deterministic-scripts</code>: home paths, emails, private keys, token shapes (<code>ghp_</code>, <code>sk-</code>, <code>AKIA</code>, <code>xox</code>, <code>Bearer</code>), <code>password=</code> style assignments, plus the literal values from your own config, so your real name or device id is caught even though no pattern names it. A hit prints the file, line and kind, never the value. Do not bypass the hook for a real hit.</p></li><li><p><strong>Public repos commit under a noreply address.</strong> Set the clone's <code>user.email</code> to your <code>&lt;id&gt;+&lt;login&gt;@users.noreply.github.com</code> address, turn on the host's "keep my email private" setting (web-UI merges use your primary email otherwise), and add a pre-push check that refuses any other address.</p></li><li><p><strong>Recordings and screenshots count.</strong> Scrub notification banners and other overlays out of a recording before it is analyzed or shared (<code>video-trim</code> does this).</p></li></ol>
+<h2 id="6-deterministic-scripts-do-the-repeatable-work"><a class="anchor" href="#6-deterministic-scripts-do-the-repeatable-work" aria-hidden="true">#</a>6. Deterministic scripts do the repeatable work</h2>
+<p>Anything an agent would do the same way twice (a count, an inventory, a parse, a build recipe, a check, a value lookup) belongs in a script, not in model tokens. Install <a href="skills/deterministic-scripts/"><code>deterministic-scripts</code></a> for the full method. In short:</p>
+<ul><li><p><strong>The script contract:</strong> <code>--help</code> that explains itself, <code>--json</code> for agents, and exit codes <code>0</code> ok, <code>1</code> the check failed, <code>2</code> bad input.</p></li><li><p><strong>No personal values in scripts.</strong> They come from arguments, paths relative to the script, or the home config reader. That is what lets the same script ship publicly and run privately.</p></li><li><p><strong>The scan, scrub and hook scripts</strong> in that skill are what sections 5.5 and 5.6 run.</p></li></ul>
+<h2 id="7-moving-a-skill-from-private-to-public"><a class="anchor" href="#7-moving-a-skill-from-private-to-public" aria-hidden="true">#</a>7. Moving a skill from private to public</h2>
+<p>If you keep your skills in a private contexts repo and publish some of them:</p>
+<ol><li><p>Fix the base first: move every workspace detail into an add-on.</p></li><li><p>Export by manifest: a list of the exact files that ship (add-ons are never listed), copied by a script, never by hand.</p></li><li><p>Leak-scan the exported folder and then the whole public repo: home paths, workspace names, your own config values, secrets.</p></li><li><p>Clean-room test: copy the skill into an empty HOME, run it with no environment and no config, and run its installer's report, install, re-check and uninstall.</p></li><li><p>Decide what stays private even when it scans clean. Workflows about your clients or your business can be generic and still not belong in public: keep an internal list the exporter refuses, and ask before shipping anything on that topic.</p></li></ol>
+<h2 id="checklist-for-a-new-skill"><a class="anchor" href="#checklist-for-a-new-skill" aria-hidden="true">#</a>Checklist for a new skill</h2>
+<ul><li><p>[ ] <code>SKILL.md</code> frontmatter: <code>name</code>, and a <code>description</code> that says when to use it.</p></li><li><p>[ ] Scripts in stdlib <code>python3</code> (3.9+), each with <code>--help</code>, <code>--json</code> and exit codes 0/1/2.</p></li><li><p>[ ] Settings: env, then <code>~/.config/&lt;skill&gt;/config.env</code>, then defaults; <code>config.example.env</code> shipped.</p></li><li><p>[ ] State outside the skill and outside your repos.</p></li><li><p>[ ] No names, emails, paths, devices, ids or secrets; scan passes.</p></li><li><p>[ ] Project specifics in an add-on that names its base and <code>base_version</code>.</p></li><li><p>[ ] <code>INSTALL.md</code>: where to put the folder per harness, the tools it needs, and how to uninstall.</p></li><li><p>[ ] Hooks fail silent (print nothing, exit 0 on an error) so they never break the harness.</p></li></ul></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

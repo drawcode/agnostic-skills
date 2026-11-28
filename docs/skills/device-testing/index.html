@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>device-testing · agnostic-skills</title>
+<meta name="description" content="Drive an attached Android phone or iPhone from the terminal with one `device` command set, and prove every action worked.">
+<meta property="og:title" content="device-testing · agnostic-skills">
+<meta property="og:description" content="Drive an attached Android phone or iPhone from the terminal with one `device` command set, and prove every action worked.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://drawcode.github.io/agnostic-skills/skills/device-testing/">
+<link rel="canonical" href="https://drawcode.github.io/agnostic-skills/skills/device-testing/">
+<meta name="theme-color" content="#0d1014">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body style="--accent: #43e5fb">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="../../index.html"><span class="dot" aria-hidden="true"></span>agnostic-skills</a>
+    <nav aria-label="Site"><a href="../../index.html#skills">Skills</a><a href="../../index.html#install-a-skill">Install</a><a href="../../authoring.html">Authoring</a><a class="gh" href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../index.html">Home</a><span>/</span><a href="../../index.html#skills">Skills</a><span>/</span>device-testing</nav>
+<h1 class="sr-only">device-testing</h1>
+<div class="prose"><p align="center"><img src="assets/banner.svg" alt="device-testing" width="100%"></p>
+<div class="actions"><a class="btn primary" href="install.html">Install guide</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/tree/main/skills/device-testing" target="_blank" rel="noopener">Folder on GitHub</a><a class="btn" href="https://github.com/drawcode/agnostic-skills/blob/main/skills/device-testing/SKILL.md" target="_blank" rel="noopener">SKILL.md</a></div>
+<p><strong>Drive an attached Android phone or iPhone from the terminal with one <code>device</code> command set, and prove every action worked.</strong></p>
+<ul><li><p>Same commands on Android and iOS: install, launch, tap, swipe, type, screenshot, record.</p></li><li><p>Taps are proven by a log line, not by exit code 0.</p></li><li><p>Knows no app: your config, profile and add-ons carry the specifics.</p></li></ul>
+<h2 id="quick-start"><a class="anchor" href="#quick-start" aria-hidden="true">#</a>Quick start</h2>
+<ol><li><p>Copy the folder into your harness: <a href="../../#install-a-skill">install a skill</a>.</p></li><li><p>Set your app ids, then list devices:</p>
+<pre><code class="lang-sh">cp config.example.env ~/.config/device-testing/config.env   # set APP_ANDROID_PACKAGE, APP_IOS_BUNDLE_ID
+python3 &lt;skill&gt;/scripts/device.py devices</code></pre></li><li><p>Try a check, a screenshot and a proven tap:</p>
+<pre><code class="lang-sh">D=&lt;skill&gt;/scripts/device.py
+python3 $D check
+python3 $D shot
+python3 $D tap 540 1200 --wait &#x27;Opened.*Menu&#x27;</code></pre></li></ol>
+<h2 id="whats-inside"><a class="anchor" href="#whats-inside" aria-hidden="true">#</a>What's inside</h2>
+<div class="table-wrap"><table><thead><tr><th>Script / file</th><th>What it does</th></tr></thead><tbody><tr><td><code>scripts/device.py</code></td><td>The <code>device</code> CLI: one command set for an attached Android phone or iPhone</td></tr><tr><td><code>scripts/ios-sim-harness.py</code></td><td>iOS simulator harness: build a tiny UIKit harness around plugin <code>.mm</code> files and drive it</td></tr><tr><td><code>scripts/device_tap_nudge.py</code></td><td>PostToolUse (Bash) hook: nudges toward a plan or the device-runner after N single device inputs in a row</td></tr><tr><td><code>scripts/device_testing/ios_recorder.py</code></td><td>iOS screen recording helper used by <code>device.py record</code></td></tr><tr><td><code>scripts/device_testing/</code></td><td>Per-platform backends (Android, iOS, iOS hid/WDA/media), plans, nav profiles</td></tr><tr><td><code>scripts/ios_media_helper/</code></td><td>Xcode project for the iOS Photos helper behind <code>device media</code></td></tr><tr><td><code>agents/device-runner.md</code></td><td>Subagent profile that runs a whole device pass and returns a verdict and evidence paths</td></tr><tr><td><code>references/</code></td><td>Command matrix, every command's arguments, capture, plans, iOS, simulator, extending</td></tr><tr><td><code>config.example.env</code></td><td>Every config key, commented</td></tr></tbody></table></div>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works" aria-hidden="true">#</a>How it works</h2>
+<p><code>device</code> routes each command to the attached phone's platform. You run a flow as one <code>device run &lt;plan&gt;</code> call instead of one input per turn.</p>
+<p>State comes from logs (<code>log</code>, <code>wait &lt;regex&gt;</code>, <code>nav &lt;id&gt;</code>). Screenshots are evidence: <code>shot</code> also writes a small copy to read.</p>
+<details>
+<summary><b>Configuration</b></summary>
+<p>Copy <code>config.example.env</code> to <code>~/.config/device-testing/config.env</code>, or point <code>DEVICE_TESTING_CONFIG</code> elsewhere. Every key can come from the environment. Never commit a filled-in copy.</p>
+<div class="table-wrap"><table><thead><tr><th>Key</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>APP_ANDROID_PACKAGE</code>, <code>APP_IOS_BUNDLE_ID</code></td><td>empty</td><td>Your app ids (set at least these)</td></tr><tr><td><code>DEVICE_&lt;ALIAS&gt;_SERIAL</code></td><td>none</td><td>Optional device alias; on iOS the serial is the UDID</td></tr><tr><td><code>DEVICE_IOS_INPUT</code></td><td><code>auto</code></td><td><code>hid</code> on iOS 27+, else <code>server</code>; or force one</td></tr><tr><td><code>DEVICE_IOS_RECORD</code></td><td><code>auto</code></td><td><code>capture</code>, <code>stream</code>, <code>shots</code>, or auto fallback</td></tr><tr><td><code>SHOT_MAX_HEIGHT</code></td><td><code>1000</code></td><td>Height of the small screenshot copy; <code>0</code> = full size only</td></tr><tr><td><code>DEVICE_QUIET_REQUIRED</code></td><td>unset</td><td><code>1</code> makes <code>preflight</code> and <code>record start</code> fail if notifications are not silenced</td></tr><tr><td><code>SCRATCH_ROOT</code></td><td>system temp dir</td><td>Where shots, video and logs go</td></tr><tr><td><code>DEVICE_TESTING_ADDONS</code></td><td>empty</td><td><code>:</code>-separated add-on modules</td></tr></tbody></table></div>
+<p>More keys (log buffer, symbol files, prefs files, input server, WDA) are in <code>config.example.env</code>.</p>
+</details>
+<details>
+<summary><b>Platform requirements</b></summary>
+<ul><li><p><code>python3</code> 3.9+, standard library only.</p></li><li><p>Android: <code>adb</code> on PATH, USB debugging on, host authorized.</p></li><li><p>iOS: Xcode (<code>xcrun devicectl</code>), <code>pymobiledevice3</code>, iPhone paired over USB with Developer Mode on and "Trust This Computer" accepted.</p></li><li><p>iOS <code>record</code>: <code>ffmpeg</code>. Full rate needs Camera access for the terminal's app, else about 5 fps screenshots.</p></li><li><p>Optional: Pillow (small copies, contact sheets), <code>idb</code> (simulator harness only).</p></li></ul>
+</details>
+<details>
+<summary><b>iOS input</b></summary>
+<ul><li><p>iOS 27+: taps go through the host (<code>hid</code>).</p></li><li><p>Older iOS, or when host taps fail: the app needs an in-app input server.</p></li><li><p>It is a loopback HTTP endpoint, started only when an environment variable is set, kept out of release builds.</p></li><li><p>Connect with <code>device launch --input-server</code>, then <code>device forward</code>.</p></li><li><p>Protocol: <a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/device-testing/references/input-server.md" target="_blank" rel="noopener"><code>references/input-server.md</code></a>.</p></li></ul>
+</details>
+<details>
+<summary><b>Optional Claude Code extras</b></summary>
+<ul><li><p>Runner subagent: copy or symlink <code>agents/device-runner.md</code> into <code>~/.claude/agents/</code>.</p></li><li><p>Tap-nudge hook: a PostToolUse hook on <code>Bash</code> that only prints a hint after 3 single inputs in a row. It never blocks.</p></li><li><p>Tune it with <code>DEVICE_TAP_NUDGE_EVERY</code> and <code>DEVICE_TAP_NUDGE_CLI</code>. Setup is in <a href="install.html"><code>INSTALL.md</code></a>.</p></li></ul>
+</details>
+<details>
+<summary><b>Safety and uninstall</b></summary>
+<ul><li><p>The runner never installs a build it was not told to, clears app data or posts anywhere.</p></li><li><p>Scratch output stays under <code>SCRATCH_ROOT</code>; nothing is written elsewhere.</p></li><li><p>Stop the app after a pass (a running game heats the phone).</p></li><li><p>Uninstall: delete the folder and <code>~/.config/device-testing/</code>.</p></li></ul>
+</details>
+<h2 id="files"><a class="anchor" href="#files" aria-hidden="true">#</a>Files</h2>
+<ul><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/device-testing/SKILL.md" target="_blank" rel="noopener"><code>SKILL.md</code></a>: what the agent reads</p></li><li><p><a href="install.html"><code>INSTALL.md</code></a>: full install and uninstall</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/blob/main/skills/device-testing/agents/device-runner.md" target="_blank" rel="noopener"><code>agents/device-runner.md</code></a>: subagent profile for a whole device pass</p></li><li><p><a href="https://github.com/drawcode/agnostic-skills/tree/main/skills/device-testing/references" target="_blank" rel="noopener"><code>references/</code></a>: command matrix, commands, capture, plans, iOS, simulator, extending</p></li></ul>
+<p><sub>Part of <a href="../../">agnostic-skills</a> · MIT</sub></p></div>
+<nav class="pager" aria-label="More skills"><a href="../video-trim/"><span>Previous</span>video-trim</a><a class="next" href="../gameplay-verification/"><span>Next</span>gameplay-verification</a></nav>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p>Made by <a href="https://drawcode.com">drawcode</a>, <a href="https://drawk.com">drawk</a> and <a href="https://drawlabs.com">drawlabs</a> · <a href="https://github.com/drawcode/agnostic-skills/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a href="https://github.com/drawcode/agnostic-skills" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>
